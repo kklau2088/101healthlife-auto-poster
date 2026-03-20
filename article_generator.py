@@ -124,8 +124,21 @@ ARTICLE REQUIREMENTS:
 - Tone: Professional, authoritative, empathetic
 
 SEO REQUIREMENTS:
-1. Use the focus keyword naturally in: the first 100 words, at least 2 H2 headings, and the conclusion.
-2. Use related LSI keywords throughout (do NOT keyword-stuff).
+1. KEYWORD DENSITY — keep the focus keyword density at approximately 1% of total word count.
+   Place the focus keyword ONLY in these 4 locations:
+     a) The H1 title
+     b) The first paragraph (intro) — use it once naturally
+     c) ONE H2 heading only (choose the most relevant section)
+     d) The final conclusion paragraph — use it once
+   Do NOT repeat the focus keyword anywhere else in the article.
+
+2. SYNONYM & PRONOUN STRATEGY — in all other sections replace the focus keyword with:
+   - Natural synonyms        (e.g. "this eating approach", "this dietary pattern", "the regimen")
+   - Descriptive phrases     (e.g. "this way of eating", "this nutritional strategy", "the plan")
+   - Pronouns & references   (e.g. "it", "this approach", "the method described above")
+   - LSI / semantic keywords (related terms Google associates with the topic, NOT the exact phrase)
+   This produces naturally flowing prose and avoids any keyword-stuffing penalty.
+
 3. Structure: Intro -> 5-7 H2 sections (each with 1-2 H3 sub-sections) -> FAQ (4-5 Q&As) -> Conclusion.
 4. FAQ section must use <h2>Frequently Asked Questions</h2> and <h3>Q: ...</h3> / <p>A: ...</p> format.
 5. Include the meta description as an HTML comment at the very top.
