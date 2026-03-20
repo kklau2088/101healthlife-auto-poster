@@ -1,6 +1,6 @@
 """
-Article Generator using Google Gemini API
-==========================================
+Article Generator using Groq API (FREE)
+========================================
 Generates fully SEO-optimised WordPress articles with:
   - Proper H1 / H2 / H3 structure
   - Focus keyword integration
@@ -8,14 +8,13 @@ Generates fully SEO-optimised WordPress articles with:
   - Compelling introduction + conclusion
   - FAQ section (boosts featured-snippet chances)
 
-FREE tier limits (as of 2025):
-  gemini-2.0-flash  — 15 requests/min, 1,500 requests/day  (more than enough for 1/day)
-  gemini-1.5-flash  — 15 requests/min, 1,500 requests/day
-  gemini-1.5-pro    — 2 requests/min,  50 requests/day
+Groq free tier limits:
+  llama-3.3-70b-versatile — 14,400 requests/day, 6,000 tokens/min
+  No credit card required, no region restrictions.
 """
 
-import google.generativeai as genai
-from config import GEMINI_API_KEY, GEMINI_MODEL, ARTICLE_MIN_WORDS, ARTICLE_MAX_WORDS, LANGUAGE, TARGET_REGION
+from groq import Groq
+from config import GROQ_API_KEY, GROQ_MODEL, ARTICLE_MIN_WORDS, ARTICLE_MAX_WORDS, LANGUAGE, TARGET_REGION
 
 
 def generate_article(topic: dict) -> dict:
@@ -31,20 +30,19 @@ def generate_article(topic: dict) -> dict:
     Returns a dict with:
         title, content (HTML), meta_desc, focus_keyword, category
     """
-    genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel(
-        model_name=GEMINI_MODEL,
-        system_instruction=(
-            "You are an expert health & wellness content writer and SEO specialist. "
-            "You write authoritative, engaging, and well-researched articles for a health blog. "
-            "Your writing style is professional yet accessible, using clear language that a general audience can understand. "
-            "You always back claims with references to studies or expert consensus."
-        ),
-    )
+    client = Groq(api_key=GROQ_API_KEY)
 
     region_note = f" Target readers are primarily from {TARGET_REGION}." if TARGET_REGION != "global" else ""
 
-    prompt = f"""Write a comprehensive, SEO-optimised health article for a WordPress blog.
+    system_prompt = (
+        "You are an expert health & wellness content writer and SEO specialist. "
+        "You write authoritative, engaging, and well-researched articles for a health blog. "
+        "Your writing style is professional yet accessible, using clear language that a general audience can understand. "
+        "You always back claims with references to studies or expert consensus. "
+        "You output ONLY valid WordPress HTML — no markdown fences, no extra commentary."
+    )
+
+    user_prompt = f"""Write a comprehensive, SEO-optimised health article for a WordPress blog.
 
 ARTICLE REQUIREMENTS:
 - Title (H1): {topic['title']}
@@ -69,17 +67,17 @@ OUTPUT FORMAT — return ONLY valid WordPress HTML (no markdown fences, no extra
 [Full article HTML here]
 """
 
-    generation_config = genai.types.GenerationConfig(
+    response = client.chat.completions.create(
+        model=GROQ_MODEL,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user",   "content": user_prompt},
+        ],
         temperature=0.7,
-        max_output_tokens=3000,
+        max_tokens=4000,
     )
 
-    response = model.generate_content(
-        prompt,
-        generation_config=generation_config,
-    )
-
-    raw_content = response.text.strip()
+    raw_content = response.choices[0].message.content.strip()
 
     # Strip optional markdown code fences if model wraps output
     if raw_content.startswith("```"):

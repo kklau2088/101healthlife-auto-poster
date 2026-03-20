@@ -1,7 +1,7 @@
 """
 Configuration file for 101healthlife.com Auto SEO Poster
 =========================================================
-Fill in your WordPress credentials and Gemini API key below.
+Fill in your WordPress credentials and Groq API key below.
 """
 
 # ─────────────────────────────────────────────
@@ -12,19 +12,19 @@ WORDPRESS_USERNAME = "your_wordpress_username"   # e.g. "admin"
 WORDPRESS_APP_PASSWORD = "xxxx xxxx xxxx xxxx xxxx xxxx"  # WordPress Application Password
 
 # ─────────────────────────────────────────────
-#  Google Gemini API Key  (for article generation)
-#  Get your FREE key at: https://aistudio.google.com/apikey
+#  Groq API Key  (100% FREE — no credit card needed)
+#  Get your free key at: https://console.groq.com/keys
 # ─────────────────────────────────────────────
-GEMINI_API_KEY = "AIzaSy-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+GROQ_API_KEY = "gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
 # ─────────────────────────────────────────────
-#  Gemini Model Selection
+#  Groq Model Selection  (all FREE)
 # ─────────────────────────────────────────────
-# Choose ONE of the following models:
-#   "gemini-2.0-flash"        — Best quality + speed, FREE tier available (recommended)
-#   "gemini-1.5-pro"          — High quality, larger context window
-#   "gemini-1.5-flash"        — Fast and free tier friendly
-GEMINI_MODEL = "gemini-2.0-flash"
+# Recommended models (all free, no region restriction):
+#   "llama-3.3-70b-versatile"   — Best quality, 14,400 req/day  (recommended)
+#   "llama-3.1-8b-instant"      — Fastest, 14,400 req/day
+#   "mixtral-8x7b-32768"        — Good quality, large context
+GROQ_MODEL = "llama-3.3-70b-versatile"
 
 # ─────────────────────────────────────────────
 #  Posting Schedule
