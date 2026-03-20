@@ -11,7 +11,7 @@ Generates fully SEO-optimised WordPress articles with:
 """
 
 import openai
-from config import OPENAI_API_KEY, ARTICLE_MIN_WORDS, ARTICLE_MAX_WORDS, LANGUAGE, TARGET_REGION
+from config import OPENAI_API_KEY, OPENAI_MODEL, ARTICLE_MIN_WORDS, ARTICLE_MAX_WORDS, LANGUAGE, TARGET_REGION
 
 
 def generate_article(topic: dict) -> dict:
@@ -64,7 +64,7 @@ OUTPUT FORMAT — return ONLY valid WordPress HTML (no markdown fences, no extra
 """
 
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model=OPENAI_MODEL,
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user",   "content": user_prompt},

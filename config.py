@@ -45,3 +45,12 @@ ARTICLE_MIN_WORDS = 1200   # Minimum word count per article
 ARTICLE_MAX_WORDS = 2000   # Maximum word count per article
 LANGUAGE = "English"       # Article language
 TARGET_REGION = "global"   # "global", "UK", "US", "AU", etc.
+
+# ─────────────────────────────────────────────
+#  OpenAI Model Selection
+# ─────────────────────────────────────────────
+# Choose ONE of the following models:
+#   "gpt-4o"          — Best quality, requires paid OpenAI account (~$0.05/article)
+#   "gpt-4o-mini"     — Good quality, cheaper (~$0.005/article), requires paid account
+#   "gpt-3.5-turbo"   — Basic quality, works on free/new accounts
+OPENAI_MODEL = "gpt-4o-mini"  # <-- Change this if you get a 403 model_not_found error
