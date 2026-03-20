@@ -77,11 +77,14 @@ def publish_article(article: dict) -> dict:
             if tag_id:
                 tag_ids.append(tag_id)
 
-    # Yoast SEO meta (requires Yoast SEO plugin — silently ignored if absent)
-    yoast_meta = {
-        "yoast_wpseo_metadesc":           article["meta_desc"],
-        "yoast_wpseo_focuskw":            article["focus_keyword"],
-        "yoast_wpseo_title":              f"{article['title']} - 101HealthLife",
+    # Rank Math SEO meta fields
+    # rank_math_focus_keyword — comma-separated keywords
+    # rank_math_description   — meta description
+    # rank_math_title         — SEO title (optional)
+    seo_meta = {
+        "rank_math_focus_keyword": article["focus_keyword"],
+        "rank_math_description":   article["meta_desc"],
+        "rank_math_title":         f"{article['title']} - 101HealthLife",
     }
 
     payload = {
@@ -90,7 +93,7 @@ def publish_article(article: dict) -> dict:
         "status":     "publish",           # Change to "draft" to review before publishing
         "categories": [category_id],
         "tags":       tag_ids,
-        "meta":       yoast_meta,
+        "meta":       seo_meta,
         "comment_status": "open",
         "ping_status":    "open",
     }
