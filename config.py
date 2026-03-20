@@ -1,7 +1,7 @@
 """
 Configuration file for 101healthlife.com Auto SEO Poster
 =========================================================
-Fill in your WordPress credentials and OpenAI API key below.
+Fill in your WordPress credentials and Gemini API key below.
 """
 
 # ─────────────────────────────────────────────
@@ -12,9 +12,19 @@ WORDPRESS_USERNAME = "your_wordpress_username"   # e.g. "admin"
 WORDPRESS_APP_PASSWORD = "xxxx xxxx xxxx xxxx xxxx xxxx"  # WordPress Application Password
 
 # ─────────────────────────────────────────────
-#  OpenAI API Key  (for article generation)
+#  Google Gemini API Key  (for article generation)
+#  Get your FREE key at: https://aistudio.google.com/apikey
 # ─────────────────────────────────────────────
-OPENAI_API_KEY = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+GEMINI_API_KEY = "AIzaSy-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# ─────────────────────────────────────────────
+#  Gemini Model Selection
+# ─────────────────────────────────────────────
+# Choose ONE of the following models:
+#   "gemini-2.0-flash"        — Best quality + speed, FREE tier available (recommended)
+#   "gemini-1.5-pro"          — High quality, larger context window
+#   "gemini-1.5-flash"        — Fast and free tier friendly
+GEMINI_MODEL = "gemini-2.0-flash"
 
 # ─────────────────────────────────────────────
 #  Posting Schedule
@@ -45,12 +55,3 @@ ARTICLE_MIN_WORDS = 1200   # Minimum word count per article
 ARTICLE_MAX_WORDS = 2000   # Maximum word count per article
 LANGUAGE = "English"       # Article language
 TARGET_REGION = "global"   # "global", "UK", "US", "AU", etc.
-
-# ─────────────────────────────────────────────
-#  OpenAI Model Selection
-# ─────────────────────────────────────────────
-# Choose ONE of the following models:
-#   "gpt-4o"          — Best quality, requires paid OpenAI account (~$0.05/article)
-#   "gpt-4o-mini"     — Good quality, cheaper (~$0.005/article), requires paid account
-#   "gpt-3.5-turbo"   — Basic quality, works on free/new accounts
-OPENAI_MODEL = "gpt-4o-mini"  # <-- Change this if you get a 403 model_not_found error
