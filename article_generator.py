@@ -12,6 +12,75 @@ from openai import OpenAI
 from config import API_KEY, API_BASE_URL, API_MODEL, ARTICLE_MIN_WORDS, ARTICLE_MAX_WORDS, LANGUAGE, TARGET_REGION
 
 
+# ─────────────────────────────────────────────
+#  High-authority external link sources
+#  These are trusted, SEO-friendly domains that
+#  Google recognises as authoritative references.
+# ─────────────────────────────────────────────
+AUTHORITY_SOURCES = {
+    "Diet": [
+        "https://www.healthline.com",
+        "https://www.mayoclinic.org",
+        "https://www.nutrition.gov",
+        "https://www.hsph.harvard.edu/nutritionsource",
+    ],
+    "Weight Loss": [
+        "https://www.niddk.nih.gov",
+        "https://www.cdc.gov/healthyweight",
+        "https://www.mayoclinic.org",
+        "https://www.healthline.com",
+    ],
+    "Nutrition": [
+        "https://www.nutrition.gov",
+        "https://ods.od.nih.gov",
+        "https://www.hsph.harvard.edu/nutritionsource",
+        "https://www.who.int/nutrition",
+    ],
+    "Mental Health": [
+        "https://www.nimh.nih.gov",
+        "https://www.mind.org.uk",
+        "https://www.mentalhealth.gov",
+        "https://www.psychologytoday.com",
+    ],
+    "Health": [
+        "https://www.who.int",
+        "https://www.cdc.gov",
+        "https://www.nhs.uk",
+        "https://www.mayoclinic.org",
+        "https://medlineplus.gov",
+    ],
+    "Health Insurance": [
+        "https://www.healthcare.gov",
+        "https://www.cms.gov",
+        "https://www.kff.org",
+        "https://www.nerdwallet.com/health-insurance",
+    ],
+    "Smoking": [
+        "https://www.cdc.gov/tobacco",
+        "https://www.nhs.uk/live-well/quit-smoking",
+        "https://smokefree.gov",
+        "https://www.who.int/tobacco",
+    ],
+    "AI in Health": [
+        "https://www.who.int/health-topics/digital-health",
+        "https://www.ncbi.nlm.nih.gov",
+        "https://www.healthit.gov",
+        "https://www.nature.com/subjects/machine-learning",
+    ],
+    "Care": [
+        "https://www.cdc.gov/aging",
+        "https://www.nia.nih.gov",
+        "https://www.caregiver.org",
+        "https://www.mayoclinic.org",
+    ],
+}
+
+
+def _get_sources_for_category(category: str) -> list:
+    """Return authority source URLs for the given category."""
+    return AUTHORITY_SOURCES.get(category, AUTHORITY_SOURCES["Health"])
+
+
 def generate_article(topic: dict) -> dict:
     """
     Generate a full SEO article for the given topic dict.
@@ -31,6 +100,10 @@ def generate_article(topic: dict) -> dict:
     )
 
     region_note = f" Target readers are primarily from {TARGET_REGION}." if TARGET_REGION != "global" else ""
+
+    # Get authority sources relevant to this article's category
+    sources = _get_sources_for_category(topic["category"])
+    sources_list = "\n".join(f"  - {s}" for s in sources)
 
     system_prompt = (
         "You are an expert health & wellness content writer and SEO specialist. "
@@ -56,6 +129,15 @@ SEO REQUIREMENTS:
 3. Structure: Intro -> 5-7 H2 sections (each with 1-2 H3 sub-sections) -> FAQ (4-5 Q&As) -> Conclusion.
 4. FAQ section must use <h2>Frequently Asked Questions</h2> and <h3>Q: ...</h3> / <p>A: ...</p> format.
 5. Include the meta description as an HTML comment at the very top.
+
+EXTERNAL LINKS REQUIREMENTS (IMPORTANT):
+- Include 3-5 external links to authoritative sources throughout the article body.
+- Link anchor text must be natural and descriptive (e.g. "according to the World Health Organization").
+- All external links must use target="_blank" rel="noopener noreferrer" attributes.
+- Use ONLY these trusted domains as your external link sources:
+{sources_list}
+- Place links naturally within sentences where they add credibility — NOT in a separate reference list.
+- Example format: <a href="https://www.who.int/nutrition" target="_blank" rel="noopener noreferrer">World Health Organization</a>
 
 OUTPUT FORMAT — return ONLY valid WordPress HTML (no markdown fences, no extra commentary):
 
