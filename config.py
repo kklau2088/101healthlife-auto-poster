@@ -20,7 +20,8 @@ OPENAI_API_KEY = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 #  Posting Schedule
 # ─────────────────────────────────────────────
 POSTS_PER_DAY = 1          # Number of articles to publish per day
-POST_TIME = "08:00"        # Time to publish (24-hour format, server local time)
+POST_TIME = "08:00"        # Time to publish (24-hour format, UTC+8 Hong Kong/Taiwan time)
+TIMEZONE = "Asia/Hong_Kong"  # Timezone for scheduling — change if needed
 
 # ─────────────────────────────────────────────
 #  WordPress Category IDs  (from your site)

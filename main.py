@@ -9,6 +9,7 @@ Run this script once and it will:
 
 Scheduling options:
   • Cron (recommended):  0 8 * * * /usr/bin/python3 /path/to/main.py
+    (If on Linux VPS, set TZ first:  TZ=Asia/Hong_Kong crontab -e)
   • OR keep-alive loop:   python3 main.py --daemon
 """
 
@@ -20,8 +21,9 @@ import schedule
 import time
 from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
-from config import POSTS_PER_DAY, POST_TIME
+from config import POSTS_PER_DAY, POST_TIME, TIMEZONE
 from topics import TOPIC_BANK
 from article_generator import generate_article
 from wp_publisher import publish_article, test_connection
@@ -69,7 +71,10 @@ def get_next_topic(history: dict) -> tuple[dict, int]:
 # ─────────────────────────────────────────────
 def run_posting_job() -> None:
     logger.info("═" * 60)
-    logger.info("Starting daily posting job — %s", datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"))
+    tz = ZoneInfo(TIMEZONE)
+    now_local = datetime.now(tz)
+    logger.info("Starting daily posting job — %s (%s)",
+                now_local.strftime("%Y-%m-%d %H:%M"), TIMEZONE)
 
     history = load_history()
     posts_today = 0
@@ -141,9 +146,22 @@ def main() -> None:
         return
 
     if args.daemon:
-        logger.info("Daemon mode: scheduling daily post at %s", POST_TIME)
-        schedule.every().day.at(POST_TIME).do(run_posting_job)
-        logger.info("Scheduler started — waiting for next run at %s...", POST_TIME)
+        # Convert POST_TIME from TIMEZONE to local machine time for the scheduler
+        tz      = ZoneInfo(TIMEZONE)
+        utc     = ZoneInfo("UTC")
+        h, m    = map(int, POST_TIME.split(":"))
+        # Build a today-date aware time in the target timezone, then convert to local
+        from datetime import date, time as dtime
+        import datetime as dt_module
+        naive_target = dt_module.datetime.combine(date.today(), dtime(h, m))
+        aware_target = naive_target.replace(tzinfo=tz)
+        local_time   = aware_target.astimezone().strftime("%H:%M")
+
+        logger.info("Daemon mode: posting at %s %s (= %s local machine time)",
+                    POST_TIME, TIMEZONE, local_time)
+        schedule.every().day.at(local_time).do(run_posting_job)
+        logger.info("Scheduler started — next run at %s (local) / %s (%s)…",
+                    local_time, POST_TIME, TIMEZONE)
         while True:
             schedule.run_pending()
             time.sleep(30)
