@@ -2,7 +2,7 @@
 
 ## System Overview
 
-A complete, production-ready automation system that **generates and publishes one SEO-optimised article per day** to [101healthlife.com](https://101healthlife.com) via the WordPress REST API, powered by OpenAI GPT-4o.
+A complete, production-ready automation system that **generates and publishes one SEO-optimised article per day** to [101healthlife.com](https://101healthlife.com) via the WordPress REST API, powered by a free AI API (chatanywhere — works in Hong Kong & mainland China).
 
 ---
 
@@ -10,13 +10,16 @@ A complete, production-ready automation system that **generates and publishes on
 
 ```
 101healthlife-auto-poster/
-├── config.py               ← ⚙️  Your credentials & settings (edit this first)
-├── topics.py               ← 📋  50+ pre-planned SEO article topics
-├── article_generator.py    ← 🤖  OpenAI GPT-4o article writer
-├── wp_publisher.py         ← 🚀  WordPress REST API publisher
-├── main.py                 ← ▶️  Main scheduler & CLI entry point
-├── requirements.txt        ← 📦  Python dependencies
-└── README.md               ← 📖  This file
+├── config.py               ← Your credentials & settings (edit this first)
+├── topics.py               ← 50+ pre-planned SEO article topics
+├── article_generator.py    ← AI article writer
+├── wp_publisher.py         ← WordPress REST API publisher (Rank Math SEO support)
+├── main.py                 ← Main scheduler & CLI entry point
+├── requirements.txt        ← Python dependencies
+├── install_windows.bat     ← Windows one-click installer
+├── run_now.bat             ← Publish one article immediately
+├── setup_scheduler.bat     ← Windows Task Scheduler setup
+└── README.md               ← This file
 ```
 
 ---
@@ -28,54 +31,54 @@ A complete, production-ready automation system that **generates and publishes on
 WordPress Application Passwords allow secure API access **without** sharing your main login password.
 
 1. Log in to your WordPress admin panel: `https://101healthlife.com/wp-admin/`
-2. Go to **Users → Profile** (top-right of screen)
+2. Go to **Users → Profile**
 3. Scroll down to the **"Application Passwords"** section
 4. In the "New Application Password Name" field, type: `Auto SEO Poster`
 5. Click **"Add New Application Password"**
 6. WordPress will show you a password like: `AbCd EfGh IjKl MnOp QrSt UvWx`
-7. **Copy this password immediately** — it will only be shown once!
+7. **Copy this password immediately** — it will only be shown once
 
 > **Security note:** Application Passwords can be revoked at any time from the same page, without changing your main password.
 
 ---
 
-### Step 2 — Get an OpenAI API Key
+### Step 2 — Get a Free AI API Key
 
-1. Visit [platform.openai.com](https://platform.openai.com)
-2. Sign in or create a free account
-3. Go to **API → API Keys → Create new secret key**
-4. Copy the key (starts with `sk-`)
+This system uses [chatanywhere](https://github.com/chatanywhere/GPT_API_free) — a free OpenAI-compatible API that works in Hong Kong and mainland China with no credit card required.
 
-> **Cost estimate:** GPT-4o generates one article (~1,500 words) for approximately **$0.03–0.06 USD**. Running daily = ~$1–2/month.
+1. Visit [github.com/chatanywhere/GPT_API_free](https://github.com/chatanywhere/GPT_API_free)
+2. Click the link to apply for a free API key (requires GitHub account)
+3. Copy your key (starts with `sk-`)
+
+> **Free tier:** 200 requests/day for GPT series — more than enough for 1 article/day.
 
 ---
 
 ### Step 3 — Configure `config.py`
 
-Open `config.py` and fill in your details:
+Open `config.py` with Notepad and fill in your details:
 
 ```python
-WORDPRESS_SITE_URL    = "https://101healthlife.com"
-WORDPRESS_USERNAME    = "admin"           # Your WP username
-WORDPRESS_APP_PASSWORD = "AbCd EfGh IjKl MnOp QrSt UvWx"  # From Step 1
-OPENAI_API_KEY         = "sk-xxxxxxxxxx"  # From Step 2
+WORDPRESS_USERNAME     = "admin"                              # Your WP username
+WORDPRESS_APP_PASSWORD = "AbCd EfGh IjKl MnOp QrSt UvWx"   # From Step 1
+API_KEY                = "sk-xxxxxxxxxx"                      # From Step 2
 ```
 
 Optional settings:
 
 | Setting | Default | Description |
 |---------|---------|-------------|
+| `API_MODEL` | `"gpt-4o-mini"` | AI model to use |
 | `POSTS_PER_DAY` | `1` | How many articles to publish per day |
-| `POST_TIME` | `"08:00"` | Time to post (24-hour, server local time) |
+| `POST_TIME` | `"08:00"` | Time to post (UTC+8 Hong Kong time) |
 | `ARTICLE_MIN_WORDS` | `1200` | Minimum article length |
 | `ARTICLE_MAX_WORDS` | `2000` | Maximum article length |
-| `TARGET_REGION` | `"global"` | Change to `"UK"`, `"US"`, `"AU"` etc. |
 
 ---
 
 ### Step 4 — Install Python Dependencies
 
-```bash
+```powershell
 pip install -r requirements.txt
 ```
 
@@ -83,65 +86,114 @@ pip install -r requirements.txt
 
 ### Step 5 — Test Your Connection
 
-Before running the scheduler, verify your WordPress credentials work:
-
-```bash
-python3 main.py --test-connection
+```powershell
+python main.py --test-connection
 ```
 
 Expected output:
 ```
-✅ Connected as: Admin (admin)
+Connected as: Admin (admin)
 ```
-
-If you see an error, double-check your `WORDPRESS_USERNAME` and `WORDPRESS_APP_PASSWORD` in `config.py`.
 
 ---
 
-### Step 6 — Run a Test Post (Recommended)
+### Step 6 — Run a Test Post
 
-Publish one article immediately to confirm the full pipeline works:
-
-```bash
-python3 main.py --now
+```powershell
+python main.py --now
 ```
 
-Then check your WordPress site — a new published article should appear within ~30 seconds.
+Check your WordPress site — a new published article should appear within ~60 seconds.
 
-> **Tip:** To publish as a **draft** instead of going live immediately, open `wp_publisher.py` and change `"status": "publish"` to `"status": "draft"`.
+> **Tip:** To review before publishing, open `wp_publisher.py` and change `"status": "publish"` to `"status": "draft"`.
 
 ---
 
-## Running the Scheduler
+## Scheduling — Windows Task Scheduler (PowerShell)
 
-### Option A: Cron Job (Recommended for servers/VPS)
+Set up the system to post automatically every day at 08:00 using Windows Task Scheduler.
 
-Add this line to your crontab (`crontab -e`):
+### Setup (run once as Administrator)
 
-```cron
-0 8 * * * /usr/bin/python3 /path/to/101healthlife-auto-poster/main.py >> /path/to/poster.log 2>&1
+**Step 1 — Open PowerShell as Administrator**
+
+Press `Windows key` → Search `PowerShell` → Right-click → **Run as Administrator**
+
+**Step 2 — Run the following command**
+
+> Replace the path with your actual folder location before running.
+
+```powershell
+$scriptPath = "C:\Users\Administrator\Downloads\101healthlife-auto-poster-main\main.py"
+$pythonPath = "python"
+$taskName   = "101HealthLife Auto Post"
+
+$action  = New-ScheduledTaskAction -Execute $pythonPath -Argument $scriptPath -WorkingDirectory (Split-Path $scriptPath)
+$trigger = New-ScheduledTaskTrigger -Daily -At "08:00AM"
+$settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Minutes 30) -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 5)
+
+Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -RunLevel Highest -Force
+
+Write-Host "Scheduled task created. Auto-posting every day at 08:00."
 ```
 
-This runs the script every day at **08:00 AM** server time.
+**Step 3 — Confirm the task was created**
 
-### Option B: Daemon Mode (Recommended for always-on computers)
-
-```bash
-python3 main.py --daemon
+```powershell
+Get-ScheduledTask -TaskName "101HealthLife Auto Post"
 ```
 
-This keeps the script running in the background and posts at the time set in `POST_TIME`.
+You should see status `Ready`.
 
-To run it persistently (even after rebooting):
+---
+
+### Managing the Scheduled Task
+
+**Run immediately (manual trigger):**
+```powershell
+Start-ScheduledTask -TaskName "101HealthLife Auto Post"
+```
+
+**Check last run time and status:**
+```powershell
+Get-ScheduledTaskInfo -TaskName "101HealthLife Auto Post"
+```
+
+**Change posting time (e.g. to 9:00 AM):**
+```powershell
+$trigger = New-ScheduledTaskTrigger -Daily -At "09:00AM"
+Set-ScheduledTask -TaskName "101HealthLife Auto Post" -Trigger $trigger
+```
+
+**Temporarily disable (pause posting):**
+```powershell
+Disable-ScheduledTask -TaskName "101HealthLife Auto Post"
+```
+
+**Re-enable after pausing:**
+```powershell
+Enable-ScheduledTask -TaskName "101HealthLife Auto Post"
+```
+
+**Delete the task permanently:**
+```powershell
+Unregister-ScheduledTask -TaskName "101HealthLife Auto Post" -Confirm:$false
+```
+
+> **Note:** The computer must be powered on at the scheduled time for the task to run. If the computer is off, that day's article will be skipped, but the next day will run normally.
+
+---
+
+## Scheduling — Linux / VPS (Cron)
+
+If running on a Linux server or VPS, use cron instead:
 
 ```bash
-# Using nohup
-nohup python3 main.py --daemon > poster.log 2>&1 &
+# Open crontab editor
+crontab -e
 
-# Or using screen
-screen -S auto-poster
-python3 main.py --daemon
-# Press Ctrl+A then D to detach
+# Add this line to post every day at 08:00 HKT (UTC+8)
+0 0 * * * TZ=Asia/Hong_Kong /usr/bin/python3 /path/to/main.py >> /path/to/poster.log 2>&1
 ```
 
 ---
@@ -149,25 +201,26 @@ python3 main.py --daemon
 ## How the System Works
 
 ```
-Every day at POST_TIME
-        │
-        ▼
+Every day at 08:00 (HKT)
+        |
+        v
   Pick next topic from topics.py  (cycles through 50+ topics)
-        │
-        ▼
-  GPT-4o generates full SEO article
-  - Proper H1/H2/H3 structure
+        |
+        v
+  AI generates full SEO article
+  - Proper H1 / H2 / H3 structure
   - Focus keyword integrated naturally
   - FAQ section for featured snippets
-  - 1,200–2,000 words
-        │
-        ▼
+  - 1,200 to 2,000 words
+        |
+        v
   Publish to WordPress REST API
   - Correct category assigned
   - Tags created automatically
-  - Yoast SEO meta fields set
-        │
-        ▼
+  - Rank Math SEO fields auto-filled
+  - Focus Keyword set automatically
+        |
+        v
   Log result to poster.log + history.json
 ```
 
@@ -175,31 +228,29 @@ Every day at POST_TIME
 
 ## Monitoring & Logs
 
-Two files track all activity:
-
 | File | Purpose |
 |------|---------|
 | `poster.log` | Full activity log with timestamps |
 | `history.json` | Published article history (title, URL, date) |
 
-View recent activity:
-```bash
-tail -50 poster.log
+**View recent logs (PowerShell):**
+```powershell
+Get-Content poster.log -Tail 50
 ```
 
-View published article history:
-```bash
-python3 -c "import json; h = json.load(open('history.json')); [print(p['date'][:10], p['title'], p['url']) for p in h['published']]"
+**View published article history (PowerShell):**
+```powershell
+python -c "import json; h = json.load(open('history.json')); [print(p['date'][:10], p['title']) for p in h['published']]"
 ```
 
 ---
 
 ## Article Topics Included
 
-The system comes with **50+ pre-planned SEO topics** across all site categories:
+The system includes **50 pre-planned SEO topics** across all site categories:
 
-| Category | Topics Included |
-|----------|----------------|
+| Category | Topics |
+|----------|--------|
 | Diet | 7 topics (Mediterranean, intermittent fasting, gut health, budget eating…) |
 | Weight Loss | 7 topics (calorie deficit, plateau, Ozempic, sleep & weight…) |
 | Nutrition | 7 topics (vitamins, protein, sugar, omega-3, magnesium, vitamin D…) |
@@ -210,42 +261,42 @@ The system comes with **50+ pre-planned SEO topics** across all site categories:
 | AI in Health | 3 topics (AI in healthcare, fitness apps, nutrition assistants) |
 | Care | 3 topics (preventive care, elder care, chronic disease management) |
 
-After cycling through all topics, the system starts again — you can add more topics to `topics.py` at any time.
+After cycling through all topics, the system restarts from the beginning. Add more topics to `topics.py` at any time.
 
 ---
 
 ## Adding Custom Topics
 
-Open `topics.py` and add entries to the `TOPIC_BANK` list:
+Open `topics.py` and add a new entry to the `TOPIC_BANK` list:
 
 ```python
 {"title":         "Your Article Title Here",
- "category":      "Health",    # Must match a key in CATEGORY_IDS in config.py
+ "category":      "Health",
  "focus_keyword": "your seo keyword",
- "meta_desc":     "Your meta description under 160 characters."},
+ "meta_desc":     "Your meta description — keep it under 160 characters."},
 ```
 
 ---
 
 ## Frequently Asked Questions
 
-**Q: Will this affect my site's SEO negatively?**
-No — the articles are human-quality, fully structured, keyword-optimised pieces. Publishing fresh content regularly is one of the most effective SEO strategies.
+**Q: Does publishing AI articles hurt SEO?**
+No — articles are fully structured, properly formatted, and keyword-optimised. Regular fresh content is one of the most effective SEO strategies.
 
-**Q: What if OpenAI is temporarily unavailable?**
-The error is caught and logged. The failed topic index is NOT incremented, so the same topic will be retried on the next run.
+**Q: What if the API fails one day?**
+The error is caught and logged. The failed topic index is not incremented, so the same topic will be retried the next day.
 
 **Q: Can I pause posting for a few days?**
-Yes — simply stop the cron job or daemon. The `history.json` remembers where you left off.
+Yes — run `Disable-ScheduledTask -TaskName "101HealthLife Auto Post"` to pause, and `Enable-ScheduledTask` to resume.
 
-**Q: Can I use a different AI model to save cost?**
-Yes — in `article_generator.py`, change `model="gpt-4o"` to `model="gpt-4o-mini"` for ~10x lower cost with slightly reduced quality.
+**Q: Can I publish more than one article per day?**
+Yes — change `POSTS_PER_DAY = 1` to `POSTS_PER_DAY = 3` in `config.py`.
 
 ---
 
-## Support
+## Support & References
 
-For help, refer to:
 - [WordPress REST API documentation](https://developer.wordpress.org/rest-api/)
-- [OpenAI API documentation](https://platform.openai.com/docs)
 - [WordPress Application Passwords guide](https://make.wordpress.org/core/2020/11/05/application-passwords-integration-guide/)
+- [chatanywhere free API](https://github.com/chatanywhere/GPT_API_free)
+- [Rank Math SEO plugin](https://rankmath.com/)
