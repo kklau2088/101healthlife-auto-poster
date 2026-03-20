@@ -1,0 +1,14 @@
+# Credentials — NEVER commit real credentials
+# config.py contains API keys, keep it safe
+
+# Runtime files
+poster.log
+history.json
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
