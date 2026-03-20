@@ -52,6 +52,13 @@ CATEGORY_IDS = {
 }
 
 # ─────────────────────────────────────────────
+#  Pexels API  (free stock photos)
+#  Get your FREE key at: https://www.pexels.com/api/
+#  Sign up → My Profile → Your API Key
+# ─────────────────────────────────────────────
+PEXELS_API_KEY = "your-pexels-api-key-here"   # Paste your Pexels API key here
+
+# ─────────────────────────────────────────────
 #  Article Generation Settings
 # ─────────────────────────────────────────────
 ARTICLE_MIN_WORDS = 1200   # Minimum word count per article
