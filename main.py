@@ -14,14 +14,25 @@ Scheduling options:
 """
 
 import argparse
+import io
 import json
 import logging
 import os
+import sys
 import schedule
 import time
 from datetime import datetime
 from pathlib import Path
-from zoneinfo import ZoneInfo
+
+# Fix Windows console Unicode encoding (handles special chars like = - >)
+if sys.platform == "win32":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
+
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    from backports.zoneinfo import ZoneInfo
 
 from config import POSTS_PER_DAY, POST_TIME, TIMEZONE
 from topics import TOPIC_BANK
@@ -70,10 +81,14 @@ def get_next_topic(history: dict) -> tuple[dict, int]:
 #  Core posting job
 # ─────────────────────────────────────────────
 def run_posting_job() -> None:
-    logger.info("═" * 60)
-    tz = ZoneInfo(TIMEZONE)
+    logger.info("=" * 60)
+    try:
+        tz = ZoneInfo(TIMEZONE)
+    except Exception:
+        import datetime as _dt
+        tz = _dt.timezone(_dt.timedelta(hours=8))
     now_local = datetime.now(tz)
-    logger.info("Starting daily posting job — %s (%s)",
+    logger.info("Starting daily posting job - %s (%s)",
                 now_local.strftime("%Y-%m-%d %H:%M"), TIMEZONE)
 
     history = load_history()
@@ -111,8 +126,8 @@ def run_posting_job() -> None:
             logger.exception("Unexpected error processing topic %d: %s", idx, exc)
 
     save_history(history)
-    logger.info("Job complete — %d/%d post(s) published today.", posts_today, POSTS_PER_DAY)
-    logger.info("═" * 60)
+    logger.info("Job complete - %d/%d post(s) published today.", posts_today, POSTS_PER_DAY)
+    logger.info("=" * 60)
 
 
 # ─────────────────────────────────────────────
@@ -147,7 +162,11 @@ def main() -> None:
 
     if args.daemon:
         # Convert POST_TIME from TIMEZONE to local machine time for the scheduler
-        tz      = ZoneInfo(TIMEZONE)
+        try:
+            tz = ZoneInfo(TIMEZONE)
+        except Exception:
+            import datetime as _dt
+            tz = _dt.timezone(_dt.timedelta(hours=8))
         utc     = ZoneInfo("UTC")
         h, m    = map(int, POST_TIME.split(":"))
         # Build a today-date aware time in the target timezone, then convert to local
@@ -160,7 +179,7 @@ def main() -> None:
         logger.info("Daemon mode: posting at %s %s (= %s local machine time)",
                     POST_TIME, TIMEZONE, local_time)
         schedule.every().day.at(local_time).do(run_posting_job)
-        logger.info("Scheduler started — next run at %s (local) / %s (%s)…",
+        logger.info("Scheduler started - next run at %s (local) / %s (%s)",
                     local_time, POST_TIME, TIMEZONE)
         while True:
             schedule.run_pending()
