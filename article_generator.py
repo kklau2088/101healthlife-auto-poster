@@ -1,20 +1,15 @@
 """
-Article Generator using Groq API (FREE)
-========================================
-Generates fully SEO-optimised WordPress articles with:
-  - Proper H1 / H2 / H3 structure
-  - Focus keyword integration
-  - Meta description
-  - Compelling introduction + conclusion
-  - FAQ section (boosts featured-snippet chances)
+Article Generator using chatanywhere free API
+=============================================
+Uses OpenAI-compatible API format with chatanywhere free endpoint.
+Free tier: 200 requests/day (GPT series), 30/day (DeepSeek)
+No region restrictions — works in Hong Kong & mainland China.
 
-Groq free tier limits:
-  llama-3.3-70b-versatile — 14,400 requests/day, 6,000 tokens/min
-  No credit card required, no region restrictions.
+Get your free key: https://github.com/chatanywhere/GPT_API_free
 """
 
-from groq import Groq
-from config import GROQ_API_KEY, GROQ_MODEL, ARTICLE_MIN_WORDS, ARTICLE_MAX_WORDS, LANGUAGE, TARGET_REGION
+from openai import OpenAI
+from config import API_KEY, API_BASE_URL, API_MODEL, ARTICLE_MIN_WORDS, ARTICLE_MAX_WORDS, LANGUAGE, TARGET_REGION
 
 
 def generate_article(topic: dict) -> dict:
@@ -30,7 +25,10 @@ def generate_article(topic: dict) -> dict:
     Returns a dict with:
         title, content (HTML), meta_desc, focus_keyword, category
     """
-    client = Groq(api_key=GROQ_API_KEY)
+    client = OpenAI(
+        api_key=API_KEY,
+        base_url=API_BASE_URL,
+    )
 
     region_note = f" Target readers are primarily from {TARGET_REGION}." if TARGET_REGION != "global" else ""
 
@@ -68,7 +66,7 @@ OUTPUT FORMAT — return ONLY valid WordPress HTML (no markdown fences, no extra
 """
 
     response = client.chat.completions.create(
-        model=GROQ_MODEL,
+        model=API_MODEL,
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user",   "content": user_prompt},

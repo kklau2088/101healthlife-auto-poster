@@ -1,7 +1,7 @@
 """
 Configuration file for 101healthlife.com Auto SEO Poster
 =========================================================
-Fill in your WordPress credentials and Groq API key below.
+Fill in your WordPress credentials and API key below.
 """
 
 # ─────────────────────────────────────────────
@@ -12,19 +12,22 @@ WORDPRESS_USERNAME = "your_wordpress_username"   # e.g. "admin"
 WORDPRESS_APP_PASSWORD = "xxxx xxxx xxxx xxxx xxxx xxxx"  # WordPress Application Password
 
 # ─────────────────────────────────────────────
-#  Groq API Key  (100% FREE — no credit card needed)
-#  Get your free key at: https://console.groq.com/keys
+#  AI API Settings
+#  Using chatanywhere free API (compatible with OpenAI format)
+#  Get free key: https://github.com/chatanywhere/GPT_API_free
 # ─────────────────────────────────────────────
-GROQ_API_KEY = "gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+API_KEY      = "your-api-key-here"                    # Paste your sk-... key here
+API_BASE_URL = "https://api.chatanywhere.tech/v1"     # Domestic: chatanywhere.tech
+                                                       # Overseas: chatanywhere.org
 
 # ─────────────────────────────────────────────
-#  Groq Model Selection  (all FREE)
+#  Model Selection
 # ─────────────────────────────────────────────
-# Recommended models (all free, no region restriction):
-#   "llama-3.3-70b-versatile"   — Best quality, 14,400 req/day  (recommended)
-#   "llama-3.1-8b-instant"      — Fastest, 14,400 req/day
-#   "mixtral-8x7b-32768"        — Good quality, large context
-GROQ_MODEL = "llama-3.3-70b-versatile"
+# Free models available (200 req/day for GPT series, 30/day for DeepSeek):
+#   "gpt-4o-mini"      — Best balance of quality & speed (recommended)
+#   "gpt-3.5-turbo"    — Faster, higher daily limit
+#   "deepseek-v3"      — Excellent quality, 30 req/day free
+API_MODEL = "gpt-4o-mini"
 
 # ─────────────────────────────────────────────
 #  Posting Schedule
