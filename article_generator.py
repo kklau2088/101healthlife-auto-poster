@@ -94,9 +94,19 @@ def generate_article(topic: dict) -> dict:
     Returns a dict with:
         title, content (HTML), meta_desc, focus_keyword, category
     """
+    # OpenRouter requires HTTP-Referer and X-Title headers
+    # to identify the app and avoid guardrail/privacy restrictions
+    extra_headers = {}
+    if "openrouter.ai" in API_BASE_URL:
+        extra_headers = {
+            "HTTP-Referer": "https://101healthlife.com",
+            "X-Title":      "101HealthLife SEO Auto Poster",
+        }
+
     client = OpenAI(
         api_key=API_KEY,
         base_url=API_BASE_URL,
+        default_headers=extra_headers,
     )
 
     region_note = f" Target readers are primarily from {TARGET_REGION}." if TARGET_REGION != "global" else ""
