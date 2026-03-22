@@ -2,6 +2,7 @@
 WordPress Publisher with Pexels Image Support
 ===============================================
 Publishes a generated article to WordPress via the REST API.
+- Validates all external links before publishing (replaces broken ones)
 - Searches Pexels for a relevant high-quality photo
 - Uploads image to WordPress Media Library
 - Sets it as the Featured Image (thumbnail)
@@ -18,10 +19,10 @@ Pexels API setup:
     2. Copy your API key into config.py -> PEXELS_API_KEY
 """
 
+import re
 import requests
 import base64
 import logging
-import mimetypes
 import os
 import tempfile
 from datetime import datetime
@@ -34,6 +35,122 @@ from config import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+# ─────────────────────────────────────────────
+#  Fallback links by domain  (used when a link
+#  is unreachable — swap to the site homepage)
+# ─────────────────────────────────────────────
+DOMAIN_FALLBACKS = {
+    "healthline.com":          "https://www.healthline.com/nutrition",
+    "mayoclinic.org":          "https://www.mayoclinic.org/healthy-lifestyle",
+    "nutrition.gov":           "https://www.nutrition.gov",
+    "hsph.harvard.edu":        "https://www.hsph.harvard.edu/nutritionsource",
+    "niddk.nih.gov":           "https://www.niddk.nih.gov/health-information",
+    "cdc.gov":                 "https://www.cdc.gov/healthyliving",
+    "ods.od.nih.gov":          "https://ods.od.nih.gov/factsheets/list-all",
+    "who.int":                 "https://www.who.int/health-topics",
+    "nhs.uk":                  "https://www.nhs.uk/live-well",
+    "medlineplus.gov":         "https://medlineplus.gov",
+    "nimh.nih.gov":            "https://www.nimh.nih.gov/health",
+    "mind.org.uk":             "https://www.mind.org.uk/information-support",
+    "mentalhealth.gov":        "https://www.mentalhealth.gov",
+    "psychologytoday.com":     "https://www.psychologytoday.com/us/basics",
+    "healthcare.gov":          "https://www.healthcare.gov",
+    "cms.gov":                 "https://www.cms.gov",
+    "kff.org":                 "https://www.kff.org/health-topics",
+    "nerdwallet.com":          "https://www.nerdwallet.com/health-insurance",
+    "smokefree.gov":           "https://smokefree.gov",
+    "ncbi.nlm.nih.gov":        "https://www.ncbi.nlm.nih.gov",
+    "healthit.gov":            "https://www.healthit.gov",
+    "nature.com":              "https://www.nature.com/subjects/health-sciences",
+    "nia.nih.gov":             "https://www.nia.nih.gov/health",
+    "caregiver.org":           "https://www.caregiver.org/resource/caregiver-help-start",
+}
+
+
+# ─────────────────────────────────────────────
+#  External link validator
+# ─────────────────────────────────────────────
+def _check_url(url: str, timeout: int = 8) -> bool:
+    """
+    Return True if *url* responds with a 2xx or 3xx status code.
+    Uses HEAD first (faster), falls back to GET if HEAD is rejected.
+    """
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/124.0 Safari/537.36"
+        )
+    }
+    try:
+        resp = requests.head(url, headers=headers, timeout=timeout,
+                             allow_redirects=True)
+        if resp.status_code < 400:
+            return True
+        # Some servers reject HEAD — retry with GET
+        resp = requests.get(url, headers=headers, timeout=timeout,
+                            allow_redirects=True, stream=True)
+        return resp.status_code < 400
+    except Exception:
+        return False
+
+
+def _get_fallback_for_url(url: str) -> str:
+    """
+    Given a broken URL, return the best fallback URL for that domain.
+    If no specific fallback is known, return the domain root.
+    """
+    for domain, fallback in DOMAIN_FALLBACKS.items():
+        if domain in url:
+            return fallback
+    # Generic fallback: strip path and return root domain
+    from urllib.parse import urlparse
+    parsed = urlparse(url)
+    return f"{parsed.scheme}://{parsed.netloc}"
+
+
+def validate_and_fix_links(content: str) -> str:
+    """
+    Scan all <a href="..."> external links in *content*.
+    For each link:
+      - If reachable   → keep as-is
+      - If unreachable → replace href with the domain fallback URL
+    Returns the updated content string.
+    """
+    # Match all external href values (http/https)
+    pattern = re.compile(r'href="(https?://[^"]+)"', re.IGNORECASE)
+    urls = pattern.findall(content)
+
+    # De-duplicate while preserving order
+    seen = set()
+    unique_urls = []
+    for u in urls:
+        if u not in seen:
+            seen.add(u)
+            unique_urls.append(u)
+
+    if not unique_urls:
+        logger.info("No external links found in article — skipping link check.")
+        return content
+
+    logger.info("Checking %d external link(s) before publishing...", len(unique_urls))
+
+    replacements = 0
+    for url in unique_urls:
+        ok = _check_url(url)
+        if ok:
+            logger.info("  [OK]     %s", url)
+        else:
+            fallback = _get_fallback_for_url(url)
+            logger.warning("  [BROKEN] %s  ->  replacing with  %s", url, fallback)
+            # Replace all occurrences of this exact href in the content
+            content = content.replace(f'href="{url}"', f'href="{fallback}"')
+            replacements += 1
+
+    logger.info("Link check complete — %d broken link(s) replaced.", replacements)
+    return content
 
 
 # ─────────────────────────────────────────────
@@ -84,7 +201,6 @@ def _fetch_pexels_image(keyword: str) -> dict | None:
 
         photos = resp.json().get("photos", [])
         if not photos:
-            # Fallback: try a more generic health keyword
             params["query"] = "healthy lifestyle"
             resp = requests.get("https://api.pexels.com/v1/search",
                                 headers=headers, params=params, timeout=15)
@@ -94,8 +210,8 @@ def _fetch_pexels_image(keyword: str) -> dict | None:
             logger.warning("No Pexels photos found for '%s'", keyword)
             return None
 
-        photo = photos[0]
-        image_url = photo["src"]["large2x"]   # 2560px wide
+        photo     = photos[0]
+        image_url = photo["src"]["large2x"]
         filename  = f"{keyword.replace(' ', '-').lower()}-{photo['id']}.jpg"
 
         return {
@@ -113,24 +229,21 @@ def _fetch_pexels_image(keyword: str) -> dict | None:
 # ─────────────────────────────────────────────
 #  WordPress media upload
 # ─────────────────────────────────────────────
-def _upload_image_to_wordpress(image_info: dict, auth_header: dict) -> int | None:
+def _upload_image_to_wordpress(image_info: dict, auth_header: dict):
     """
     Download the image from Pexels and upload it to WordPress media library.
-    Returns the WordPress media attachment ID, or None on failure.
+    Returns (media_id, media_url) or (None, None) on failure.
     """
     try:
-        # Download image to a temp file
         img_resp = requests.get(image_info["url"], timeout=30)
         if not img_resp.ok:
             logger.warning("Failed to download image from Pexels")
-            return None
+            return None, None
 
-        suffix = ".jpg"
-        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
             tmp.write(img_resp.content)
             tmp_path = tmp.name
 
-        # Upload to WordPress
         upload_url = f"{WORDPRESS_SITE_URL}/wp-json/wp/v2/media"
         upload_headers = {
             "Authorization":       auth_header["Authorization"],
@@ -145,18 +258,16 @@ def _upload_image_to_wordpress(image_info: dict, auth_header: dict) -> int | Non
                 timeout=60,
             )
 
-        os.unlink(tmp_path)  # Clean up temp file
+        os.unlink(tmp_path)
 
         if upload_resp.ok:
-            media_id = upload_resp.json().get("id")
+            media_id  = upload_resp.json().get("id")
             media_url = upload_resp.json().get("source_url", "")
 
-            # Add photographer credit to alt text and caption
             caption = (f'Photo by <a href="{image_info["photo_url"]}" '
                        f'target="_blank">{image_info["photographer"]}</a> on '
                        f'<a href="https://www.pexels.com" target="_blank">Pexels</a>')
 
-            # Update media metadata
             requests.post(
                 f"{WORDPRESS_SITE_URL}/wp-json/wp/v2/media/{media_id}",
                 headers=auth_header,
@@ -184,9 +295,7 @@ def _upload_image_to_wordpress(image_info: dict, auth_header: dict) -> int | Non
 # ─────────────────────────────────────────────
 def _insert_image_into_content(content: str, media_url: str,
                                 alt_text: str, caption: str) -> str:
-    """
-    Insert a featured image block after the first </p> tag in the article.
-    """
+    """Insert a featured image block after the first </p> tag."""
     if not media_url:
         return content
 
@@ -197,12 +306,9 @@ def _insert_image_into_content(content: str, media_url: str,
         f'</figure>\n'
     )
 
-    # Insert after the first closing </p> (end of intro paragraph)
     insert_pos = content.find("</p>")
     if insert_pos != -1:
         return content[:insert_pos + 4] + img_html + content[insert_pos + 4:]
-
-    # Fallback: prepend to content
     return img_html + content
 
 
@@ -230,10 +336,11 @@ def _get_or_create_tag(tag_name: str, headers: dict) -> int | None:
 # ─────────────────────────────────────────────
 def publish_article(article: dict) -> dict:
     """
-    Post the article to WordPress and return a result dict.
-
-    article keys expected:
-        title, content, meta_desc, focus_keyword, category
+    Pre-publish pipeline:
+      1. Validate & fix all external links in the article
+      2. Fetch + upload a Pexels image
+      3. Insert image into content + set as featured image
+      4. Publish to WordPress with Rank Math SEO meta
     """
     auth_header = _get_auth_header()
     api_url     = f"{WORDPRESS_SITE_URL}/wp-json/wp/v2/posts"
@@ -250,27 +357,29 @@ def publish_article(article: dict) -> dict:
             if tag_id:
                 tag_ids.append(tag_id)
 
-    # ── Pexels image ──────────────────────────
-    content    = article["content"]
-    media_id   = None
+    # ── Step 1: Validate & fix external links ──
+    logger.info("Step 1/3 - Validating external links...")
+    content = validate_and_fix_links(article["content"])
 
-    logger.info("Searching Pexels for: %s", article["focus_keyword"])
+    # ── Step 2: Pexels image ───────────────────
+    logger.info("Step 2/3 - Fetching Pexels image...")
+    media_id = None
     image_info = _fetch_pexels_image(article["focus_keyword"])
 
     if image_info:
         media_id, media_url = _upload_image_to_wordpress(image_info, auth_header)
         if media_id and media_url:
-            # Insert inline image into article body
-            caption = (f'Photo by <a href="{image_info["photo_url"]}" '
-                       f'target="_blank">{image_info["photographer"]}</a> on Pexels')
-            alt_text = article["focus_keyword"]
-            content = _insert_image_into_content(content, media_url, alt_text, caption)
+            caption  = (f'Photo by <a href="{image_info["photo_url"]}" '
+                        f'target="_blank">{image_info["photographer"]}</a> on Pexels')
+            content  = _insert_image_into_content(
+                content, media_url, article["focus_keyword"], caption)
             logger.info("Image inserted into article content")
         else:
             media_id = None
-    # ──────────────────────────────────────────
 
-    # Rank Math SEO meta
+    # ── Step 3: Publish ────────────────────────
+    logger.info("Step 3/3 - Publishing to WordPress...")
+
     seo_meta = {
         "rank_math_focus_keyword": article["focus_keyword"],
         "rank_math_description":   article["meta_desc"],
@@ -278,21 +387,19 @@ def publish_article(article: dict) -> dict:
     }
 
     payload = {
-        "title":            article["title"],
-        "content":          content,
-        "status":           "publish",
-        "categories":       [category_id],
-        "tags":             tag_ids,
-        "meta":             seo_meta,
-        "comment_status":   "open",
-        "ping_status":      "open",
+        "title":          article["title"],
+        "content":        content,
+        "status":         "publish",
+        "categories":     [category_id],
+        "tags":           tag_ids,
+        "meta":           seo_meta,
+        "comment_status": "open",
+        "ping_status":    "open",
     }
 
-    # Set featured image if upload succeeded
     if media_id:
         payload["featured_media"] = media_id
 
-    logger.info("Publishing: %s  [%s]", article["title"], category_name)
     resp = requests.post(api_url, json=payload, headers=auth_header, timeout=30)
 
     if resp.status_code in (200, 201):
@@ -334,15 +441,11 @@ def test_connection() -> bool:
         user = resp.json()
         print(f"WordPress: Connected as {user.get('name')} ({user.get('slug')})")
 
-        # Also test Pexels
         if PEXELS_API_KEY and PEXELS_API_KEY != "your-pexels-api-key-here":
             p = requests.get("https://api.pexels.com/v1/search",
                              headers={"Authorization": PEXELS_API_KEY},
                              params={"query": "health", "per_page": 1}, timeout=10)
-            if p.ok:
-                print("Pexels API: Connected OK")
-            else:
-                print(f"Pexels API: Error {p.status_code}")
+            print("Pexels API: Connected OK" if p.ok else f"Pexels API: Error {p.status_code}")
         else:
             print("Pexels API: Key not configured")
         return True
