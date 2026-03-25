@@ -1,21 +1,25 @@
 """
-Article Generator using chatanywhere free API
-=============================================
-Uses OpenAI-compatible API format with chatanywhere free endpoint.
-Free tier: 200 requests/day (GPT series), 30/day (DeepSeek)
-No region restrictions — works in Hong Kong & mainland China.
+Article Generator using OpenRouter / chatanywhere API
+======================================================
+Uses OpenAI-compatible API format.
+Includes automatic word count validation — if the generated article
+is shorter than ARTICLE_MIN_WORDS, the system automatically requests
+the AI to expand it until the minimum is reached (up to 3 attempts).
 
-Get your free key: https://github.com/chatanywhere/GPT_API_free
+Get your free OpenRouter key: https://openrouter.ai
+Get your free chatanywhere key: https://github.com/chatanywhere/GPT_API_free
 """
 
+import re
 from openai import OpenAI
 from config import API_KEY, API_BASE_URL, API_MODEL, ARTICLE_MIN_WORDS, ARTICLE_MAX_WORDS, LANGUAGE, TARGET_REGION
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 # ─────────────────────────────────────────────
 #  High-authority external link sources
-#  These are trusted, SEO-friendly domains that
-#  Google recognises as authoritative references.
 # ─────────────────────────────────────────────
 AUTHORITY_SOURCES = {
     "Diet": [
@@ -81,38 +85,64 @@ def _get_sources_for_category(category: str) -> list:
     return AUTHORITY_SOURCES.get(category, AUTHORITY_SOURCES["Health"])
 
 
-def generate_article(topic: dict) -> dict:
-    """
-    Generate a full SEO article for the given topic dict.
+def _count_words(html: str) -> int:
+    """Strip HTML tags and count words in plain text."""
+    plain = re.sub(r"<[^>]+>", " ", html)       # remove tags
+    plain = re.sub(r"<!--.*?-->", " ", plain)    # remove comments
+    plain = re.sub(r"\s+", " ", plain).strip()   # collapse whitespace
+    return len(plain.split())
 
-    topic keys expected:
-        title         - Article H1 title
-        category      - Site category name
-        focus_keyword - Primary SEO keyword
-        meta_desc     - SEO meta description (<=160 chars)
 
-    Returns a dict with:
-        title, content (HTML), meta_desc, focus_keyword, category
-    """
-    # OpenRouter requires HTTP-Referer and X-Title headers
-    # to identify the app and avoid guardrail/privacy restrictions
+def _build_client() -> OpenAI:
+    """Create the OpenAI-compatible client with correct headers."""
     extra_headers = {}
     if "openrouter.ai" in API_BASE_URL:
         extra_headers = {
             "HTTP-Referer": "https://101healthlife.com",
             "X-Title":      "101HealthLife SEO Auto Poster",
         }
-
-    client = OpenAI(
+    return OpenAI(
         api_key=API_KEY,
         base_url=API_BASE_URL,
         default_headers=extra_headers,
     )
 
-    region_note = f" Target readers are primarily from {TARGET_REGION}." if TARGET_REGION != "global" else ""
 
-    # Get authority sources relevant to this article's category
-    sources = _get_sources_for_category(topic["category"])
+def _call_api(client: OpenAI, messages: list) -> str:
+    """Send messages to the API and return stripped content string."""
+    response = client.chat.completions.create(
+        model=API_MODEL,
+        messages=messages,
+        temperature=0.7,
+        max_tokens=5000,   # raised to 5000 to allow longer articles
+    )
+    raw = response.choices[0].message.content.strip()
+
+    # Strip optional markdown code fences
+    if raw.startswith("```"):
+        raw = raw.split("```", 2)[1]
+        if raw.startswith("html"):
+            raw = raw[4:]
+        raw = raw.rsplit("```", 1)[0].strip()
+
+    return raw
+
+
+def generate_article(topic: dict) -> dict:
+    """
+    Generate a full SEO article, then verify word count.
+    If the article is shorter than ARTICLE_MIN_WORDS, automatically
+    ask the AI to expand it — up to MAX_EXPAND_ATTEMPTS times.
+
+    topic keys expected:
+        title, category, focus_keyword, meta_desc
+    """
+    MAX_EXPAND_ATTEMPTS = 3
+
+    client       = _build_client()
+    region_note  = (f" Target readers are primarily from {TARGET_REGION}."
+                    if TARGET_REGION != "global" else "")
+    sources      = _get_sources_for_category(topic["category"])
     sources_list = "\n".join(f"  - {s}" for s in sources)
 
     system_prompt = (
@@ -130,7 +160,10 @@ ARTICLE REQUIREMENTS:
 - Focus keyword: {topic['focus_keyword']}
 - Category: {topic['category']}
 - Language: {LANGUAGE}{region_note}
-- Word count: {ARTICLE_MIN_WORDS}-{ARTICLE_MAX_WORDS} words
+- Word count: MINIMUM {ARTICLE_MIN_WORDS} words, TARGET {ARTICLE_MAX_WORDS} words
+  IMPORTANT: The article MUST contain at least {ARTICLE_MIN_WORDS} words.
+  Do NOT stop writing until you have reached this minimum.
+  Each H2 section should contain at least 150-200 words of body text.
 - Tone: Professional, authoritative, empathetic
 
 SEO REQUIREMENTS:
@@ -149,7 +182,8 @@ SEO REQUIREMENTS:
    - LSI / semantic keywords (related terms Google associates with the topic, NOT the exact phrase)
    This produces naturally flowing prose and avoids any keyword-stuffing penalty.
 
-3. Structure: Intro -> 5-7 H2 sections (each with 1-2 H3 sub-sections) -> FAQ (4-5 Q&As) -> Conclusion.
+3. Structure: Intro -> 5-7 H2 sections (each with 1-2 H3 sub-sections, min 150 words per section)
+   -> FAQ (4-5 Q&As, each answer at least 60 words) -> Conclusion (at least 100 words).
 4. FAQ section must use <h2>Frequently Asked Questions</h2> and <h3>Q: ...</h3> / <p>A: ...</p> format.
 5. Include the meta description as an HTML comment at the very top.
 
@@ -167,27 +201,59 @@ OUTPUT FORMAT — return ONLY valid WordPress HTML (no markdown fences, no extra
 <!-- meta_description: {topic['meta_desc']} -->
 <h1>{topic['title']}</h1>
 
-[Full article HTML here]
+[Full article HTML here — remember MINIMUM {ARTICLE_MIN_WORDS} words]
 """
 
-    response = client.chat.completions.create(
-        model=API_MODEL,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user",   "content": user_prompt},
-        ],
-        temperature=0.7,
-        max_tokens=4000,
-    )
+    # ── Initial generation ────────────────────
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user",   "content": user_prompt},
+    ]
 
-    raw_content = response.choices[0].message.content.strip()
+    logger.info("Generating article: %s", topic["title"])
+    raw_content = _call_api(client, messages)
+    word_count  = _count_words(raw_content)
+    logger.info("Initial generation: %d words", word_count)
 
-    # Strip optional markdown code fences if model wraps output
-    if raw_content.startswith("```"):
-        raw_content = raw_content.split("```", 2)[1]
-        if raw_content.startswith("html"):
-            raw_content = raw_content[4:]
-        raw_content = raw_content.rsplit("```", 1)[0].strip()
+    # ── Auto-expand if too short ──────────────
+    attempt = 0
+    while word_count < ARTICLE_MIN_WORDS and attempt < MAX_EXPAND_ATTEMPTS:
+        attempt += 1
+        shortfall = ARTICLE_MIN_WORDS - word_count
+        logger.warning(
+            "Article too short (%d words, minimum %d). "
+            "Expanding... (attempt %d/%d)",
+            word_count, ARTICLE_MIN_WORDS, attempt, MAX_EXPAND_ATTEMPTS
+        )
+
+        expand_prompt = (
+            f"The article you wrote is only {word_count} words, "
+            f"but it must be at least {ARTICLE_MIN_WORDS} words. "
+            f"It is {shortfall} words too short.\n\n"
+            f"Please expand the existing article by:\n"
+            f"1. Adding more detail and explanation to each H2 section (at least 100 more words per section)\n"
+            f"2. Expanding each FAQ answer to be more thorough (at least 80 words each)\n"
+            f"3. Adding practical tips, examples, or evidence-based information\n"
+            f"4. Expanding the conclusion to at least 120 words\n\n"
+            f"Return the COMPLETE expanded article as valid WordPress HTML. "
+            f"Do NOT summarise — return the full article from start to finish."
+        )
+
+        messages.append({"role": "assistant", "content": raw_content})
+        messages.append({"role": "user",      "content": expand_prompt})
+
+        raw_content = _call_api(client, messages)
+        word_count  = _count_words(raw_content)
+        logger.info("After expansion attempt %d: %d words", attempt, word_count)
+
+    if word_count < ARTICLE_MIN_WORDS:
+        logger.warning(
+            "Could not reach minimum word count after %d attempts. "
+            "Publishing with %d words.",
+            MAX_EXPAND_ATTEMPTS, word_count
+        )
+    else:
+        logger.info("Word count OK: %d words (min: %d)", word_count, ARTICLE_MIN_WORDS)
 
     return {
         "title":         topic["title"],
@@ -195,4 +261,5 @@ OUTPUT FORMAT — return ONLY valid WordPress HTML (no markdown fences, no extra
         "meta_desc":     topic["meta_desc"],
         "focus_keyword": topic["focus_keyword"],
         "category":      topic["category"],
+        "word_count":    word_count,
     }
