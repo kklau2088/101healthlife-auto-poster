@@ -113,7 +113,35 @@ Check your WordPress site — a new published article should appear within ~60 s
 
 Set up the system to post automatically every day at 08:00 using Windows Task Scheduler.
 
-### Setup (run once as Administrator)
+### Option A — One-Click Setup Script (Recommended)
+
+A ready-made PowerShell script is included: **`setup_scheduler.ps1`**
+
+1. Right-click `setup_scheduler.ps1`
+2. Select **"Run with PowerShell"** (or open PowerShell as Administrator and run it)
+3. The script automatically detects your Python path and working directory — no manual editing needed
+
+The script will output:
+```
+============================================
+  101HealthLife Auto Poster — Scheduler Setup
+============================================
+Python path : C:\Users\...\python.exe
+Script path : C:\...\main.py
+Working dir : C:\...\101healthlife-auto-poster-main
+Post time   : 08:00AM (daily)
+
+============================================
+  Scheduler set up successfully!
+============================================
+  Task name  : 101HealthLife Auto Post
+  Status     : Ready
+  Next run   : 08:00:00 tomorrow
+```
+
+---
+
+### Option B — Manual PowerShell Setup
 
 **Step 1 — Open PowerShell as Administrator**
 
@@ -121,29 +149,52 @@ Press `Windows key` → Search `PowerShell` → Right-click → **Run as Adminis
 
 **Step 2 — Run the following command**
 
-> Replace the path with your actual folder location before running.
+> The script auto-detects your Python path. Replace only the `$scriptPath` if your folder is in a different location.
 
 ```powershell
-$scriptPath = "C:\Users\Administrator\Downloads\101healthlife-auto-poster-main\main.py"
-$pythonPath = "python"
 $taskName   = "101HealthLife Auto Post"
+$scriptPath = "C:\Users\Administrator\Downloads\101healthlife-auto-poster-main\main.py"
+$pythonPath = (where.exe python | Select-Object -First 1).Trim()
+$workDir    = Split-Path $scriptPath
 
-$action  = New-ScheduledTaskAction -Execute $pythonPath -Argument $scriptPath -WorkingDirectory (Split-Path $scriptPath)
-$trigger = New-ScheduledTaskTrigger -Daily -At "08:00AM"
-$settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Minutes 30) -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 5)
+$action   = New-ScheduledTaskAction -Execute $pythonPath -Argument $scriptPath -WorkingDirectory $workDir
+$trigger  = New-ScheduledTaskTrigger -Daily -At "08:00AM"
+$settings = New-ScheduledTaskSettingsSet `
+                -ExecutionTimeLimit (New-TimeSpan -Minutes 30) `
+                -RestartCount 3 `
+                -RestartInterval (New-TimeSpan -Minutes 5) `
+                -StartWhenAvailable
 
 Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -RunLevel Highest -Force
-
-Write-Host "Scheduled task created. Auto-posting every day at 08:00."
+Write-Host "Done. Python: $pythonPath"
 ```
 
-**Step 3 — Confirm the task was created**
+> **`-StartWhenAvailable`** — if the computer is off at 08:00, the task will run automatically as soon as it powers on.
+
+**Step 3 — Verify**
 
 ```powershell
-Get-ScheduledTask -TaskName "101HealthLife Auto Post"
+Get-ScheduledTaskInfo -TaskName "101HealthLife Auto Post" | Select LastRunTime, LastTaskResult, NextRunTime
 ```
 
-You should see status `Ready`.
+`LastTaskResult: 0` = success ✅
+
+---
+
+### Troubleshooting — LastTaskResult Error Codes
+
+| Code | Meaning | Fix |
+|------|---------|-----|
+| `0` | Success | — |
+| `2147942402` | File not found | Python or script path is wrong — re-run `setup_scheduler.ps1` |
+| `2147942405` | Access denied | Run PowerShell as Administrator |
+| `1` | General error | Check `poster.log` for details |
+
+**If you get `2147942402`**, delete and recreate the task:
+```powershell
+Unregister-ScheduledTask -TaskName "101HealthLife Auto Post" -Confirm:$false
+# Then re-run setup_scheduler.ps1
+```
 
 ---
 
@@ -156,7 +207,7 @@ Start-ScheduledTask -TaskName "101HealthLife Auto Post"
 
 **Check last run time and status:**
 ```powershell
-Get-ScheduledTaskInfo -TaskName "101HealthLife Auto Post"
+Get-ScheduledTaskInfo -TaskName "101HealthLife Auto Post" | Select LastRunTime, LastTaskResult, NextRunTime
 ```
 
 **Change posting time (e.g. to 9:00 AM):**
