@@ -114,7 +114,7 @@ def _call_api(client: OpenAI, messages: list) -> str:
         model=API_MODEL,
         messages=messages,
         temperature=0.7,
-        max_tokens=5000,   # raised to 5000 to allow longer articles
+        max_tokens=7000,   # raised to 7000 to allow 2600+ word articles
     )
     raw = response.choices[0].message.content.strip()
 
@@ -163,7 +163,7 @@ ARTICLE REQUIREMENTS:
 - Word count: MINIMUM {ARTICLE_MIN_WORDS} words, TARGET {ARTICLE_MAX_WORDS} words
   IMPORTANT: The article MUST contain at least {ARTICLE_MIN_WORDS} words.
   Do NOT stop writing until you have reached this minimum.
-  Each H2 section should contain at least 150-200 words of body text.
+  Each H2 section should contain at least 300-400 words of body text.
 - Tone: Professional, authoritative, empathetic
 
 SEO REQUIREMENTS:
@@ -182,8 +182,8 @@ SEO REQUIREMENTS:
    - LSI / semantic keywords (related terms Google associates with the topic, NOT the exact phrase)
    This produces naturally flowing prose and avoids any keyword-stuffing penalty.
 
-3. Structure: Intro -> 5-7 H2 sections (each with 1-2 H3 sub-sections, min 150 words per section)
-   -> FAQ (4-5 Q&As, each answer at least 60 words) -> Conclusion (at least 100 words).
+3. Structure: Intro (min 150 words) -> 6-8 H2 sections (each with 1-2 H3 sub-sections, min 300 words per section)
+   -> FAQ (5-6 Q&As, each answer at least 100 words) -> Conclusion (at least 200 words).
 4. FAQ section must use <h2>Frequently Asked Questions</h2> and <h3>Q: ...</h3> / <p>A: ...</p> format.
 5. Include the meta description as an HTML comment at the very top.
 
@@ -231,10 +231,11 @@ OUTPUT FORMAT — return ONLY valid WordPress HTML (no markdown fences, no extra
             f"but it must be at least {ARTICLE_MIN_WORDS} words. "
             f"It is {shortfall} words too short.\n\n"
             f"Please expand the existing article by:\n"
-            f"1. Adding more detail and explanation to each H2 section (at least 100 more words per section)\n"
-            f"2. Expanding each FAQ answer to be more thorough (at least 80 words each)\n"
-            f"3. Adding practical tips, examples, or evidence-based information\n"
-            f"4. Expanding the conclusion to at least 120 words\n\n"
+            f"1. Adding more detail, data, and explanation to each H2 section (at least 200 more words per section)\n"
+            f"2. Expanding each FAQ answer to be more thorough (at least 100 words each)\n"
+            f"3. Adding practical tips, real-world examples, and evidence-based information\n"
+            f"4. Expanding the conclusion to at least 200 words\n"
+            f"5. Adding a new H2 section if needed to reach the word count\n\n"
             f"Return the COMPLETE expanded article as valid WordPress HTML. "
             f"Do NOT summarise — return the full article from start to finish."
         )

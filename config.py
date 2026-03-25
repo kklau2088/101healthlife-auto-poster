@@ -61,7 +61,7 @@ PEXELS_API_KEY = "your-pexels-api-key-here"   # Paste your Pexels API key here
 # ─────────────────────────────────────────────
 #  Article Generation Settings
 # ─────────────────────────────────────────────
-ARTICLE_MIN_WORDS = 1200   # Minimum word count per article
-ARTICLE_MAX_WORDS = 2000   # Maximum word count per article
+ARTICLE_MIN_WORDS = 2600   # Minimum word count per article
+ARTICLE_MAX_WORDS = 3500   # Maximum word count per article
 LANGUAGE = "English"       # Article language
 TARGET_REGION = "global"   # "global", "UK", "US", "AU", etc.
