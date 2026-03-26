@@ -81,14 +81,20 @@ API_MODEL    = "gpt-4o-mini"
 **Account Setup Steps:**
 
 1. Visit [openrouter.ai](https://openrouter.ai) and click **"Sign In"** → sign up with Google or GitHub (free)
+
 2. Go to [openrouter.ai/settings/credits](https://openrouter.ai/settings/credits)
-3. Click **"Add Credits"** and top up a minimum of **$10 USD** (one-time, no subscription)
+   - Click **"Add Credits"** and top up a minimum of **$10 USD** (one-time, no subscription)
 
 > **Why add credits?** OpenRouter requires at least $10 in purchased credits to unlock the full free model quota. Without it, free models are limited to only **50 requests/day**. After topping up, the limit increases to **1,000 requests/day** — more than enough for daily article generation.
 
 > **Note:** The $10 credit is only spent when you use paid models. Free models (ending in `:free`) do **not** deduct from your credit balance.
 
-4. **Enable free model endpoints (Guardrails → Privacy Settings):**
+3. **Create an API Key:**
+   - Go to [openrouter.ai/settings/keys](https://openrouter.ai/settings/keys) → click **"Create Key"**
+   - Give it a name (e.g. `101healthlife`) and click **"Create"**
+   - Copy your key (starts with `sk-or-`) and save it
+
+4. **Configure Guardrails (enable free model endpoints):**
    - In the left sidebar, click **"Guardrails"** (or go to [openrouter.ai/workspaces/default/guardrails](https://openrouter.ai/workspaces/default/guardrails))
    - Scroll down to the **"Privacy Settings"** section
    - Turn **ON** the following three toggles:
@@ -97,12 +103,9 @@ API_MODEL    = "gpt-4o-mini"
      - **"Enable free endpoints that may publish prompts"**
    - Leave **"ZDR Endpoints Only"** turned **OFF**
 
-> **Why is this required?** By default, OpenRouter may restrict access to free model endpoints. Without enabling these toggles, free models (Llama, Gemma, Mistral, GPT OSS, etc.) will return a **404 error** and cannot be used. This setting must be configured once per account.
+> **Why is this required?** Without enabling these toggles, free models (Llama, Gemma, Mistral, GPT OSS, etc.) will return a **404 error** and cannot be used. This setting must be configured once per account.
 
-5. Go to [openrouter.ai/settings/keys](https://openrouter.ai/settings/keys) → click **"Create Key"**
-6. Give it a name (e.g. `101healthlife`) and click **"Create"**
-7. Copy your key (starts with `sk-or-`)
-8. In `config.py`, set:
+5. In `config.py`, set:
 
 ```python
 API_KEY      = "sk-or-xxxxxxxxxx"
