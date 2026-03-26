@@ -96,12 +96,16 @@ API_MODEL    = "gpt-4o-mini"
 
 4. **Configure Guardrails (enable free model endpoints):**
    - In the left sidebar, click **"Guardrails"** (or go to [openrouter.ai/workspaces/default/guardrails](https://openrouter.ai/workspaces/default/guardrails))
+   - Scroll down to the **Basic Info** Settings-fill in the Guardrail name and description.
    - Scroll down to the **"Privacy Settings"** section
    - Turn **ON** the following three toggles:
      - **"Enable paid endpoints that may train on inputs"**
      - **"Enable free endpoints that may train on inputs"**
      - **"Enable free endpoints that may publish prompts"**
    - Leave **"ZDR Endpoints Only"** turned **OFF**
+   -Scroll down to the **Models** Settings-Choose your want use AI Models
+   -Scroll down to the **Providers** Settings-Choose your want Allow AI providers
+   -Scroll down to the **Api Keys** Settings-Add your openrouter api key
 
 > **Why is this required?** Without enabling these toggles, free models (Llama, Gemma, Mistral, GPT OSS, etc.) will return a **404 error** and cannot be used. This setting must be configured once per account.
 
