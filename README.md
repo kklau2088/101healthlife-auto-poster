@@ -88,13 +88,16 @@ API_MODEL    = "gpt-4o-mini"
 
 > **Note:** The $10 credit is only spent when you use paid models. Free models (ending in `:free`) do **not** deduct from your credit balance.
 
-4. **Enable third-party model providers (Privacy / Guardrail setting):**
-   - Go to [openrouter.ai/settings/privacy](https://openrouter.ai/settings/privacy)
-   - Find the **"Guardrails"** section
-   - Set provider access to **"Allow all providers"** (or enable third-party models)
-   - Click **Save**
+4. **Enable free model endpoints (Guardrails setting):**
+   - Go to [openrouter.ai/workspaces/default/guardrails](https://openrouter.ai/workspaces/default/guardrails)
+   - Scroll down to the **"Privacy Settings"** section
+   - Turn **ON** the following three toggles:
+     - **"Enable paid endpoints that may train on inputs"**
+     - **"Enable free endpoints that may train on inputs"**
+     - **"Enable free endpoints that may publish prompts"**
+   - Leave **"ZDR Endpoints Only"** turned **OFF**
 
-> **Why is this required?** By default, OpenRouter restricts requests to first-party providers only. Without enabling third-party providers, most free models (Llama, Gemma, Mistral, GPT OSS, etc.) will return a **404 error** and cannot be used. This setting must be enabled once per account.
+> **Why is this required?** By default, OpenRouter may restrict access to free model endpoints. Without enabling these toggles, free models (Llama, Gemma, Mistral, GPT OSS, etc.) will return a **404 error** and cannot be used. This setting must be configured once per account.
 
 5. Go to [openrouter.ai/settings/keys](https://openrouter.ai/settings/keys) → click **"Create Key"**
 6. Give it a name (e.g. `101healthlife`) and click **"Create"**
