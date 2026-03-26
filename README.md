@@ -88,8 +88,8 @@ API_MODEL    = "gpt-4o-mini"
 
 > **Note:** The $10 credit is only spent when you use paid models. Free models (ending in `:free`) do **not** deduct from your credit balance.
 
-4. **Enable free model endpoints (Guardrails setting):**
-   - Go to [openrouter.ai/workspaces/default/guardrails](https://openrouter.ai/workspaces/default/guardrails)
+4. **Enable free model endpoints (Guardrails → Privacy Settings):**
+   - In the left sidebar, click **"Guardrails"** (or go to [openrouter.ai/workspaces/default/guardrails](https://openrouter.ai/workspaces/default/guardrails))
    - Scroll down to the **"Privacy Settings"** section
    - Turn **ON** the following three toggles:
      - **"Enable paid endpoints that may train on inputs"**
