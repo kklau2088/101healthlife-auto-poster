@@ -93,6 +93,7 @@ API_MODEL    = "meta-llama/llama-3.3-70b-instruct:free"
 
 | Model | ID for `API_MODEL` | Notes |
 |-------|--------------------|-------|
+| GPT OSS 120B | `openai/gpt-oss-120b:free` | Highest quality, OpenAI open model |
 | Llama 3.3 70B | `meta-llama/llama-3.3-70b-instruct:free` | Best quality free model |
 | Llama 3.1 8B | `meta-llama/llama-3.1-8b-instruct:free` | Faster, lighter |
 | Gemma 2 9B | `google/gemma-2-9b-it:free` | Good for structured content |
