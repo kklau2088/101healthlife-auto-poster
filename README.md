@@ -2,7 +2,14 @@
 
 ## System Overview
 
-A complete, production-ready automation system that **generates and publishes one SEO-optimised article per day** to [101healthlife.com](https://101healthlife.com) via the WordPress REST API, powered by a free AI API (chatanywhere — works in Hong Kong & mainland China).
+A complete, production-ready automation system that **generates and publishes one SEO-optimised article per day** to [101healthlife.com](https://101healthlife.com) via the WordPress REST API.
+
+Supports two free AI API providers — both work in Hong Kong and mainland China with no credit card required:
+
+| Provider | Base URL | Best For |
+|----------|----------|----------|
+| [chatanywhere](https://github.com/chatanywhere/GPT_API_free) | `https://api.chatanywhere.tech/v1` | GPT-4o-mini, stable free tier |
+| [OpenRouter](https://openrouter.ai) | `https://openrouter.ai/api/v1` | Access to 50+ models (Llama, Mistral, Gemma, etc.) |
 
 ---
 
@@ -44,13 +51,56 @@ WordPress Application Passwords allow secure API access **without** sharing your
 
 ### Step 2 — Get a Free AI API Key
 
-This system uses [chatanywhere](https://github.com/chatanywhere/GPT_API_free) — a free OpenAI-compatible API that works in Hong Kong and mainland China with no credit card required.
+This system supports two AI API providers. Choose either one:
+
+---
+
+#### Option A — chatanywhere (Recommended for GPT models)
+
+[chatanywhere](https://github.com/chatanywhere/GPT_API_free) provides a free OpenAI-compatible API that works in Hong Kong and mainland China.
 
 1. Visit [github.com/chatanywhere/GPT_API_free](https://github.com/chatanywhere/GPT_API_free)
 2. Click the link to apply for a free API key (requires GitHub account)
 3. Copy your key (starts with `sk-`)
+4. In `config.py`, set:
 
-> **Free tier:** 200 requests/day for GPT series — more than enough for 1 article/day.
+```python
+API_KEY      = "sk-xxxxxxxxxx"
+API_BASE_URL = "https://api.chatanywhere.tech/v1"
+API_MODEL    = "gpt-4o-mini"
+```
+
+> **Free tier:** 200 requests/day for GPT-4o-mini — more than enough for 1 article/day.
+
+---
+
+#### Option B — OpenRouter (Recommended for model variety)
+
+[OpenRouter](https://openrouter.ai) provides access to 50+ AI models from different providers, many with a free tier.
+
+1. Visit [openrouter.ai](https://openrouter.ai) and sign up (free account)
+2. Go to **Keys** → click **"Create Key"**
+3. Copy your key (starts with `sk-or-`)
+4. In `config.py`, set:
+
+```python
+API_KEY      = "sk-or-xxxxxxxxxx"
+API_BASE_URL = "https://openrouter.ai/api/v1"
+API_MODEL    = "meta-llama/llama-3.3-70b-instruct:free"
+```
+
+**Recommended free models on OpenRouter:**
+
+| Model | ID for `API_MODEL` | Notes |
+|-------|--------------------|-------|
+| Llama 3.3 70B | `meta-llama/llama-3.3-70b-instruct:free` | Best quality free model |
+| Llama 3.1 8B | `meta-llama/llama-3.1-8b-instruct:free` | Faster, lighter |
+| Gemma 2 9B | `google/gemma-2-9b-it:free` | Good for structured content |
+| Mistral 7B | `mistralai/mistral-7b-instruct:free` | Reliable general purpose |
+
+> **Free tier:** Most free models allow ~20 requests/minute. The system automatically adds the required `HTTP-Referer` and `X-Title` headers for OpenRouter.
+
+> **Note:** Free models on OpenRouter occasionally have rate limits or downtime. If one model fails, simply change `API_MODEL` in `config.py` to another from the table above.
 
 ---
 
@@ -62,17 +112,19 @@ Open `config.py` with Notepad and fill in your details:
 WORDPRESS_USERNAME     = "admin"                              # Your WP username
 WORDPRESS_APP_PASSWORD = "AbCd EfGh IjKl MnOp QrSt UvWx"   # From Step 1
 API_KEY                = "sk-xxxxxxxxxx"                      # From Step 2
+API_BASE_URL           = "https://api.chatanywhere.tech/v1"  # chatanywhere or OpenRouter
+API_MODEL              = "gpt-4o-mini"                        # Model name
 ```
 
 Optional settings:
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `API_MODEL` | `"gpt-4o-mini"` | AI model to use |
+| `API_MODEL` | `"gpt-4o-mini"` | AI model to use (see Step 2 for OpenRouter models) |
 | `POSTS_PER_DAY` | `1` | How many articles to publish per day |
 | `POST_TIME` | `"08:00"` | Time to post (UTC+8 Hong Kong time) |
-| `ARTICLE_MIN_WORDS` | `1200` | Minimum article length |
-| `ARTICLE_MAX_WORDS` | `2000` | Maximum article length |
+| `ARTICLE_MIN_WORDS` | `2600` | Minimum article length |
+| `ARTICLE_MAX_WORDS` | `3500` | Maximum article length |
 
 ---
 
@@ -260,12 +312,21 @@ Every day at 08:00 (HKT)
         v
   AI generates full SEO article
   - Proper H1 / H2 / H3 structure
-  - Focus keyword integrated naturally
+  - Focus keyword integrated naturally (~1% keyword density)
   - FAQ section for featured snippets
-  - 1,200 to 2,000 words
+  - 2,600 to 3,500 words (auto-expanded if too short)
+  - Every paragraph kept under 120 words
         |
         v
-  Publish to WordPress REST API
+  Pre-publish checks (5 steps)
+  Step 1 — Validate & fix external links (broken links auto-replaced)
+  Step 2 — Fix long paragraphs >120 words (Rank Math 14.2)
+  Step 3 — Fetch Pexels featured image & upload to WordPress
+  Step 4 — Ensure at least 4 images in article (Rank Math 14.3)
+  Step 5 — Publish to WordPress REST API
+        |
+        v
+  WordPress post published
   - Correct category assigned
   - Tags created automatically
   - Rank Math SEO fields auto-filled
@@ -350,4 +411,6 @@ Yes — change `POSTS_PER_DAY = 1` to `POSTS_PER_DAY = 3` in `config.py`.
 - [WordPress REST API documentation](https://developer.wordpress.org/rest-api/)
 - [WordPress Application Passwords guide](https://make.wordpress.org/core/2020/11/05/application-passwords-integration-guide/)
 - [chatanywhere free API](https://github.com/chatanywhere/GPT_API_free)
+- [OpenRouter — free AI models](https://openrouter.ai/models?q=free)
+- [Pexels API](https://www.pexels.com/api/)
 - [Rank Math SEO plugin](https://rankmath.com/)
