@@ -88,10 +88,18 @@ API_MODEL    = "gpt-4o-mini"
 
 > **Note:** The $10 credit is only spent when you use paid models. Free models (ending in `:free`) do **not** deduct from your credit balance.
 
-4. Go to [openrouter.ai/settings/keys](https://openrouter.ai/settings/keys) → click **"Create Key"**
-5. Give it a name (e.g. `101healthlife`) and click **"Create"**
-6. Copy your key (starts with `sk-or-`)
-7. In `config.py`, set:
+4. **Enable third-party model providers (Privacy / Guardrail setting):**
+   - Go to [openrouter.ai/settings/privacy](https://openrouter.ai/settings/privacy)
+   - Find the **"Guardrails"** section
+   - Set provider access to **"Allow all providers"** (or enable third-party models)
+   - Click **Save**
+
+> **Why is this required?** By default, OpenRouter restricts requests to first-party providers only. Without enabling third-party providers, most free models (Llama, Gemma, Mistral, GPT OSS, etc.) will return a **404 error** and cannot be used. This setting must be enabled once per account.
+
+5. Go to [openrouter.ai/settings/keys](https://openrouter.ai/settings/keys) → click **"Create Key"**
+6. Give it a name (e.g. `101healthlife`) and click **"Create"**
+7. Copy your key (starts with `sk-or-`)
+8. In `config.py`, set:
 
 ```python
 API_KEY      = "sk-or-xxxxxxxxxx"
