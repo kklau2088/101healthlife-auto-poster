@@ -76,17 +76,27 @@ API_MODEL    = "gpt-4o-mini"
 
 #### Option B — OpenRouter (Recommended for model variety)
 
-[OpenRouter](https://openrouter.ai) provides access to 50+ AI models from different providers, many with a free tier.
+[OpenRouter](https://openrouter.ai) provides access to 50+ AI models from different providers, many with a free tier. Complete the following account setup **before** using free models:
 
-1. Visit [openrouter.ai](https://openrouter.ai) and sign up (free account)
-2. Go to **Keys** → click **"Create Key"**
-3. Copy your key (starts with `sk-or-`)
-4. In `config.py`, set:
+**Account Setup Steps:**
+
+1. Visit [openrouter.ai](https://openrouter.ai) and click **"Sign In"** → sign up with Google or GitHub (free)
+2. Go to [openrouter.ai/settings/credits](https://openrouter.ai/settings/credits)
+3. Click **"Add Credits"** and top up a minimum of **$10 USD** (one-time, no subscription)
+
+> **Why add credits?** OpenRouter requires at least $10 in purchased credits to unlock the full free model quota. Without it, free models are limited to only **50 requests/day**. After topping up, the limit increases to **1,000 requests/day** — more than enough for daily article generation.
+
+> **Note:** The $10 credit is only spent when you use paid models. Free models (ending in `:free`) do **not** deduct from your credit balance.
+
+4. Go to [openrouter.ai/settings/keys](https://openrouter.ai/settings/keys) → click **"Create Key"**
+5. Give it a name (e.g. `101healthlife`) and click **"Create"**
+6. Copy your key (starts with `sk-or-`)
+7. In `config.py`, set:
 
 ```python
 API_KEY      = "sk-or-xxxxxxxxxx"
 API_BASE_URL = "https://openrouter.ai/api/v1"
-API_MODEL    = "meta-llama/llama-3.3-70b-instruct:free"
+API_MODEL    = "openai/gpt-oss-120b:free"
 ```
 
 **Recommended free models on OpenRouter:**
@@ -99,9 +109,14 @@ API_MODEL    = "meta-llama/llama-3.3-70b-instruct:free"
 | Gemma 2 9B | `google/gemma-2-9b-it:free` | Good for structured content |
 | Mistral 7B | `mistralai/mistral-7b-instruct:free` | Reliable general purpose |
 
-> **Free tier:** Most free models allow ~20 requests/minute. The system automatically adds the required `HTTP-Referer` and `X-Title` headers for OpenRouter.
+**Free model rate limits:**
 
-> **Note:** Free models on OpenRouter occasionally have rate limits or downtime. If one model fails, simply change `API_MODEL` in `config.py` to another from the table above.
+| Account credit status | Daily limit | Per-minute limit |
+|----------------------|-------------|-----------------|
+| Less than $10 purchased | 50 requests/day | 20 req/min |
+| $10 or more purchased | 1,000 requests/day | 20 req/min |
+
+> The system automatically adds the required `HTTP-Referer` and `X-Title` headers for OpenRouter. If a free model is temporarily unavailable, change `API_MODEL` in `config.py` to another model from the table above.
 
 ---
 
