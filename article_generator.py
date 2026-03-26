@@ -166,6 +166,12 @@ ARTICLE REQUIREMENTS:
   Each H2 section should contain at least 300-400 words of body text.
 - Tone: Professional, authoritative, empathetic
 
+PARAGRAPH RULES (IMPORTANT — Rank Math requirement):
+- Every <p> paragraph must contain NO MORE than 120 words.
+- If a paragraph would exceed 120 words, split it into two shorter paragraphs.
+- Aim for paragraphs of 60-100 words for best readability.
+- Never write a wall of text — keep content scannable and easy to read.
+
 SEO REQUIREMENTS:
 1. KEYWORD DENSITY — keep the focus keyword density at approximately 1% of total word count.
    Place the focus keyword ONLY in these 4 locations:

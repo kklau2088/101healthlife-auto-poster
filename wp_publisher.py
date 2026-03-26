@@ -154,6 +154,175 @@ def validate_and_fix_links(content: str) -> str:
 
 
 # ─────────────────────────────────────────────
+#  Check 1: Paragraph length (Rank Math 14.2)
+#  Rank Math fails if any <p> exceeds 120 words
+# ─────────────────────────────────────────────
+def fix_long_paragraphs(content: str, max_words: int = 120) -> str:
+    """
+    Find any <p>...</p> blocks exceeding max_words and split them
+    at a sentence boundary into two shorter paragraphs.
+    Returns the updated content string.
+    """
+    pattern = re.compile(r'<p>(.*?)</p>', re.DOTALL | re.IGNORECASE)
+    fixes   = 0
+
+    def split_paragraph(match):
+        nonlocal fixes
+        inner = match.group(1)
+        # Count words (strip inner tags for counting only)
+        plain = re.sub(r'<[^>]+>', '', inner)
+        words = plain.split()
+        if len(words) <= max_words:
+            return match.group(0)   # fine — leave unchanged
+
+        # Split at sentence boundary closest to the midpoint
+        sentences = re.split(r'(?<=[.!?])\s+', inner.strip())
+        if len(sentences) < 2:
+            # No sentence boundary found — hard split at word limit
+            word_list = inner.split()
+            mid = len(word_list) // 2
+            part1 = " ".join(word_list[:mid])
+            part2 = " ".join(word_list[mid:])
+            fixes += 1
+            return f"<p>{part1}</p>\n<p>{part2}</p>"
+
+        # Group sentences into two balanced halves
+        half      = len(words) // 2
+        count     = 0
+        split_at  = len(sentences) // 2   # default: split in half
+        for i, sent in enumerate(sentences):
+            count += len(re.sub(r'<[^>]+>', '', sent).split())
+            if count >= half:
+                split_at = i + 1
+                break
+
+        part1 = " ".join(sentences[:split_at])
+        part2 = " ".join(sentences[split_at:])
+        if not part2.strip():
+            return match.group(0)
+
+        fixes += 1
+        return f"<p>{part1}</p>\n<p>{part2}</p>"
+
+    new_content = pattern.sub(split_paragraph, content)
+    if fixes:
+        logger.info("Paragraph check: split %d long paragraph(s) (max %d words each).",
+                    fixes, max_words)
+    else:
+        logger.info("Paragraph check: all paragraphs OK (max %d words).", max_words)
+    return new_content
+
+
+# ─────────────────────────────────────────────
+#  Check 2: Image count (Rank Math 14.3)
+#  Rank Math requires at least 4 images for
+#  a 100% score on the media test
+# ─────────────────────────────────────────────
+def _count_images_in_content(content: str) -> int:
+    """Count <img> tags in the article content."""
+    return len(re.findall(r'<img\s', content, re.IGNORECASE))
+
+
+def insert_extra_pexels_images(content: str, keyword: str,
+                                auth_header: dict,
+                                target_count: int = 4) -> str:
+    """
+    If the article has fewer than target_count images, fetch additional
+    Pexels photos (using related search terms) and insert them at
+    evenly-spaced H2 boundaries throughout the article.
+    """
+    current = _count_images_in_content(content)
+    needed  = target_count - current
+
+    if needed <= 0:
+        logger.info("Image check: %d image(s) found — no extra images needed.", current)
+        return content
+
+    logger.info("Image check: %d image(s) found, need %d more to reach %d total.",
+                current, needed, target_count)
+
+    # Build varied search queries so we get different photos
+    base_words = keyword.split()
+    search_queries = [
+        keyword,
+        f"{base_words[0]} health" if base_words else "healthy living",
+        "healthy lifestyle",
+        "wellness nutrition",
+        "medical health",
+    ]
+
+    # Find all </h2> positions — we insert images after H2 headings
+    h2_positions = [m.end() for m in re.finditer(r'</h2>', content, re.IGNORECASE)]
+
+    # Skip the first H2 (already has featured image after intro)
+    insert_positions = h2_positions[1:] if len(h2_positions) > 1 else h2_positions
+
+    images_added = 0
+    offset       = 0   # track content length change as we insert
+
+    for i in range(needed):
+        if images_added >= needed:
+            break
+
+        query      = search_queries[i % len(search_queries)]
+        image_info = _fetch_pexels_image(query)
+        if not image_info:
+            continue
+
+        # Use a different photo ID by requesting page 2 for variety
+        if i > 0:
+            try:
+                headers_p = {"Authorization": PEXELS_API_KEY}
+                resp = requests.get(
+                    "https://api.pexels.com/v1/search",
+                    headers=headers_p,
+                    params={"query": query, "orientation": "landscape",
+                            "size": "large", "per_page": 5, "page": i + 1},
+                    timeout=15,
+                )
+                if resp.ok and resp.json().get("photos"):
+                    photo       = resp.json()["photos"][0]
+                    image_info  = {
+                        "url":          photo["src"]["large2x"],
+                        "filename":     f"{query.replace(' ','-')}-{photo['id']}.jpg",
+                        "photographer": photo.get("photographer", "Pexels"),
+                        "photo_url":    photo.get("url", "https://www.pexels.com"),
+                    }
+            except Exception:
+                pass
+
+        media_id, media_url = _upload_image_to_wordpress(image_info, auth_header)
+        if not media_id or not media_url:
+            continue
+
+        caption  = (f'Photo by <a href="{image_info["photo_url"]}" '
+                    f'target="_blank">{image_info["photographer"]}</a> on Pexels')
+        img_html = (
+            f'\n<figure class="wp-block-image size-large">'
+            f'<img src="{media_url}" alt="{query}" class="wp-image" />'
+            f'<figcaption>{caption}</figcaption>'
+            f'</figure>\n'
+        )
+
+        # Insert after an H2 heading (spread evenly through the article)
+        if i < len(insert_positions):
+            pos = insert_positions[i] + offset
+        else:
+            # Fallback: insert before the FAQ section or near the end
+            faq_pos = content.find('<h2>Frequently Asked Questions')
+            pos = (faq_pos + offset) if faq_pos != -1 else len(content) + offset - 50
+
+        content  = content[:pos] + img_html + content[pos:]
+        offset  += len(img_html)
+        images_added += 1
+        logger.info("Extra image %d/%d inserted (query: '%s')", images_added, needed, query)
+
+    logger.info("Image check complete: %d total image(s) in article.",
+                current + images_added)
+    return content
+
+
+# ─────────────────────────────────────────────
 #  Auth helpers
 # ─────────────────────────────────────────────
 def _get_auth_header() -> dict:
@@ -338,9 +507,10 @@ def publish_article(article: dict) -> dict:
     """
     Pre-publish pipeline:
       1. Validate & fix all external links in the article
-      2. Fetch + upload a Pexels image
-      3. Insert image into content + set as featured image
-      4. Publish to WordPress with Rank Math SEO meta
+      2. Fix paragraphs exceeding 120 words (Rank Math 14.2)
+      3. Fetch + upload a Pexels featured image
+      4. Insert extra images to reach at least 4 total (Rank Math 14.3)
+      5. Publish to WordPress with Rank Math SEO meta
     """
     auth_header = _get_auth_header()
     api_url     = f"{WORDPRESS_SITE_URL}/wp-json/wp/v2/posts"
@@ -358,11 +528,15 @@ def publish_article(article: dict) -> dict:
                 tag_ids.append(tag_id)
 
     # ── Step 1: Validate & fix external links ──
-    logger.info("Step 1/3 - Validating external links...")
+    logger.info("Step 1/5 - Validating external links...")
     content = validate_and_fix_links(article["content"])
 
-    # ── Step 2: Pexels image ───────────────────
-    logger.info("Step 2/3 - Fetching Pexels image...")
+    # ── Step 2: Fix long paragraphs (Rank Math 14.2) ──
+    logger.info("Step 2/5 - Checking paragraph lengths (Rank Math 14.2)...")
+    content = fix_long_paragraphs(content)
+
+    # ── Step 3: Pexels featured image ─────────
+    logger.info("Step 3/5 - Fetching Pexels featured image...")
     media_id = None
     image_info = _fetch_pexels_image(article["focus_keyword"])
 
@@ -373,12 +547,18 @@ def publish_article(article: dict) -> dict:
                         f'target="_blank">{image_info["photographer"]}</a> on Pexels')
             content  = _insert_image_into_content(
                 content, media_url, article["focus_keyword"], caption)
-            logger.info("Image inserted into article content")
+            logger.info("Featured image inserted into article content")
         else:
             media_id = None
 
-    # ── Step 3: Publish ────────────────────────
-    logger.info("Step 3/3 - Publishing to WordPress...")
+    # ── Step 4: Ensure at least 4 images (Rank Math 14.3) ──
+    logger.info("Step 4/5 - Checking image count (Rank Math 14.3)...")
+    content = insert_extra_pexels_images(
+        content, article["focus_keyword"], auth_header, target_count=4
+    )
+
+    # ── Step 5: Publish ────────────────────────
+    logger.info("Step 5/5 - Publishing to WordPress...")
 
     seo_meta = {
         "rank_math_focus_keyword": article["focus_keyword"],
