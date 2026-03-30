@@ -434,7 +434,7 @@ def insert_extra_pexels_images(
         # Mark this photo as used so it won't appear in later slots
         used_ids.add(image_info["id"])
 
-        caption = f'Photo by {image_info["photographer"]} on Pexels'
+        caption = f'Photo by {image_info["photographer"]} on <a href="{image_info["photo_url"]}" target="_blank" rel="noopener noreferrer">Pexels</a>'
         img_html = (
             f'\n'
             f'<figure class="wp-block-image aligncenter">'
@@ -516,7 +516,7 @@ def _upload_image_to_wordpress(image_info: dict, auth_header: dict):
             media_id = upload_resp.json().get("id")
             media_url = upload_resp.json().get("source_url", "")
 
-            caption = f'Photo by {image_info["photographer"]} on Pexels'
+            caption = f'Photo by {image_info["photographer"]} on <a href="{image_info["photo_url"]}" target="_blank" rel="noopener noreferrer">Pexels</a>'
 
             requests.post(
                 f"{WORDPRESS_SITE_URL}/wp-json/wp/v2/media/{media_id}",
@@ -640,7 +640,7 @@ def publish_article(article: dict) -> dict:
         if media_id and media_url:
             # Mark photo as used immediately so extra-image step won't reuse it
             used_ids.add(image_info["id"])
-            caption = f'Photo by {image_info["photographer"]} on Pexels'
+            caption = f'Photo by {image_info["photographer"]} on <a href="{image_info["photo_url"]}" target="_blank" rel="noopener noreferrer">Pexels</a>'
             content = _insert_image_into_content(
                 content, media_url, article["focus_keyword"], caption
             )
