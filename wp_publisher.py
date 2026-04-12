@@ -602,8 +602,8 @@ def publish_article(article: dict) -> dict:
     api_url = f"{WORDPRESS_SITE_URL}/wp-json/wp/v2/posts"
 
     # Resolve category
-    category_name = article.get("category", "Health")
-    category_id = CATEGORY_IDS.get(category_name, CATEGORY_IDS["Health"])
+    category_name = article.get("category", "Diet")
+    category_id = CATEGORY_IDS.get(category_name, CATEGORY_IDS["Diet"])
 
     # Build / resolve tags from focus keyword
     tag_ids = []
