@@ -2,6 +2,9 @@
 Configuration file for 101healthlife.com Auto SEO Poster
 =========================================================
 Fill in your WordPress credentials and API key below.
+
+UPDATED: Removed "Health" and "Care" categories
+ADDED: "Lifestyle" and "Women's Health" categories
 """
 
 # ─────────────────────────────────────────────
@@ -38,17 +41,31 @@ TIMEZONE = "Asia/Hong_Kong"  # Timezone for scheduling — change if needed
 
 # ─────────────────────────────────────────────
 #  WordPress Category IDs  (from your site)
+#  
+#  UPDATED CATEGORIES:
+#  ✓ Diet
+#  ✓ Weight Loss
+#  ✓ Nutrition
+#  ✓ Mental Health
+#  ✓ Health Insurance
+#  ✓ Smoking
+#  ✓ AI in Health
+#  ✓ Lifestyle (NEW)
+#  ✓ Women's Health (NEW)
+#  
+#  ✗ Health (REMOVED)
+#  ✗ Care (REMOVED)
 # ─────────────────────────────────────────────
 CATEGORY_IDS = {
-    "Diet":            1,
-    "Weight Loss":     16,
-    "Health":          17,
-    "Nutrition":       19,
-    "Smoking":         21,
-    "Care":            22,
-    "Health Insurance":23,
-    "Mental Health":   73,
-    "AI in Health":    39,
+    "Diet":              1,
+    "Weight Loss":      16,
+    "Nutrition":        19,
+    "Smoking":          21,
+    "Health Insurance": 23,
+    "Mental Health":    73,
+    "AI in Health":     39,
+    "Lifestyle":        "UPDATE_THIS",        # TODO: Update with actual category ID from WordPress
+    "Women's Health":   "UPDATE_THIS",        # TODO: Update with actual category ID from WordPress
 }
 
 # ─────────────────────────────────────────────

@@ -3,6 +3,9 @@ SEO Article Topics Database for 101healthlife.com
 ==================================================
 A rotating bank of 90+ SEO-optimised topics across all site categories.
 The scheduler cycles through these automatically.
+
+UPDATED: Removed "Health" and "Care" categories
+ADDED: "Lifestyle" and "Women's Health" categories
 """
 
 TOPIC_BANK = [
@@ -119,43 +122,6 @@ TOPIC_BANK = [
      "category": "Mental Health", "focus_keyword": "burnout recovery",
      "meta_desc": "Burnout is more than just tiredness. This guide covers the stages of burnout, warning signs, and a step-by-step recovery plan."},
 
-    # ── Health ───────────────────────────────────────────────────────────────
-    {"title": "How to Strengthen Your Immune System: 15 Evidence-Based Tips",
-     "category": "Health", "focus_keyword": "strengthen immune system",
-     "meta_desc": "Boost your body's natural defences with these 15 science-backed lifestyle habits, foods, and supplements for a stronger immune system."},
-
-    {"title": "High Blood Pressure: Causes, Symptoms, and Natural Remedies",
-     "category": "Health", "focus_keyword": "high blood pressure natural remedies",
-     "meta_desc": "Learn what causes hypertension, how to recognise it, and the most effective natural lifestyle strategies to lower your blood pressure."},
-
-    {"title": "Type 2 Diabetes Prevention: 10 Lifestyle Changes That Work",
-     "category": "Health", "focus_keyword": "type 2 diabetes prevention",
-     "meta_desc": "Prevent type 2 diabetes with these 10 doctor-recommended lifestyle modifications backed by clinical research."},
-
-    {"title": "Heart Health: The 8 Best Foods for a Healthy Heart",
-     "category": "Health", "focus_keyword": "best foods for heart health",
-     "meta_desc": "Protect your heart with these 8 nutrient-rich foods that are proven to lower cholesterol, reduce inflammation, and support cardiovascular health."},
-
-    {"title": "How Much Water Should You Actually Drink Each Day?",
-     "category": "Health", "focus_keyword": "how much water per day",
-     "meta_desc": "The '8 glasses a day' rule is a myth. Here's what the science says about optimal daily water intake based on your body and lifestyle."},
-
-    {"title": "The Benefits of Walking 10,000 Steps a Day—And Why It Works",
-     "category": "Health", "focus_keyword": "10000 steps benefits",
-     "meta_desc": "Is 10,000 steps a day the magic number? We break down the research on walking targets and their real impact on health."},
-
-    {"title": "Understanding Inflammation: What It Is and How to Reduce It",
-     "category": "Health", "focus_keyword": "chronic inflammation reduction",
-     "meta_desc": "Chronic inflammation underlies many modern diseases. Learn what triggers it and which diet, lifestyle, and supplement strategies reduce it effectively."},
-
-    {"title": "The Science of Sleep: How to Get Better Sleep Tonight",
-     "category": "Health", "focus_keyword": "how to get better sleep",
-     "meta_desc": "Poor sleep affects everything from immunity to mood. Discover the science of sleep cycles and 12 evidence-based tips for deeper, more restorative sleep."},
-
-    {"title": "Back Pain Relief: Causes, Exercises, and Prevention Tips",
-     "category": "Health", "focus_keyword": "back pain relief exercises",
-     "meta_desc": "Back pain affects 8 in 10 people. Learn the most common causes, effective relief exercises, and prevention strategies to stay pain-free."},
-
     # ── Health Insurance ─────────────────────────────────────────────────────
     {"title": "How to Choose the Right Health Insurance Plan in 2025",
      "category": "Health Insurance", "focus_keyword": "choose health insurance plan",
@@ -203,16 +169,66 @@ TOPIC_BANK = [
      "category": "AI in Health", "focus_keyword": "AI nutrition assistant",
      "meta_desc": "AI-powered nutrition apps promise personalised dietary advice. Here's how the technology works and whether it can meaningfully improve your diet."},
 
-    # ── Care ─────────────────────────────────────────────────────────────────
-    {"title": "Preventive Healthcare: Why Annual Check-Ups Could Save Your Life",
-     "category": "Care", "focus_keyword": "preventive healthcare check-ups",
-     "meta_desc": "Preventive care is the most cost-effective way to stay healthy. Learn which screenings, vaccines, and check-ups are recommended at every age."},
+    # ── Lifestyle ────────────────────────────────────────────────────────────
+    {"title": "Work-Life Balance: Practical Strategies for a Healthier Lifestyle",
+     "category": "Lifestyle", "focus_keyword": "work-life balance tips",
+     "meta_desc": "Struggling to balance work and personal time? Learn proven strategies to achieve better work-life balance and reduce stress."},
 
-    {"title": "How to Care for an Ageing Parent at Home: A Comprehensive Guide",
-     "category": "Care", "focus_keyword": "caring for ageing parent at home",
-     "meta_desc": "Providing home care for an elderly parent is both rewarding and demanding. This guide covers safety modifications, daily routines, and carer self-care."},
+    {"title": "How to Build Lasting Healthy Habits: The Science of Habit Formation",
+     "category": "Lifestyle", "focus_keyword": "building healthy habits",
+     "meta_desc": "Want to change your lifestyle? Discover the science behind habit formation and practical steps to build habits that stick."},
 
-    {"title": "Chronic Disease Management: Building a Routine That Keeps You Well",
-     "category": "Care", "focus_keyword": "chronic disease management",
-     "meta_desc": "Living with a chronic condition requires structure and strategy. Discover proven daily routines and tools for effective long-term disease management."},
+    {"title": "Minimalism for Health: How Simplifying Your Life Improves Wellbeing",
+     "category": "Lifestyle", "focus_keyword": "minimalism health wellbeing",
+     "meta_desc": "Declutter your space, declutter your mind. Learn how minimalist living reduces stress and supports better physical and mental health."},
+
+    {"title": "The Digital Detox Guide: How to Reduce Screen Time and Sleep Better",
+     "category": "Lifestyle", "focus_keyword": "digital detox screen time",
+     "meta_desc": "Screen addiction affects sleep and mental health. Here's a practical guide to a digital detox that actually works."},
+
+    {"title": "Travel and Health: How to Stay Healthy While Travelling",
+     "category": "Lifestyle", "focus_keyword": "stay healthy while travelling",
+     "meta_desc": "Protect your health while exploring the world. Tips for jet lag, hydration, movement, and avoiding illness while travelling."},
+
+    {"title": "Social Connection and Longevity: Why Relationships Matter for Health",
+     "category": "Lifestyle", "focus_keyword": "social connection health longevity",
+     "meta_desc": "Strong relationships aren't just emotionally fulfilling—they're vital for physical health. Discover the science of social wellness."},
+
+    {"title": "Seasonal Affective Disorder (SAD): Light Therapy and Winter Wellness",
+     "category": "Lifestyle", "focus_keyword": "seasonal affective disorder light therapy",
+     "meta_desc": "Winter blues are real. Learn about SAD, light therapy, and evidence-based strategies to maintain mood and energy through dark seasons."},
+
+    # ── Women's Health ───────────────────────────────────────────────────────
+    {"title": "Menstrual Cycle Health: Understanding Your Cycle and Optimizing Nutrition",
+     "category": "Women's Health", "focus_keyword": "menstrual cycle health nutrition",
+     "meta_desc": "Your cycle isn't just about menstruation. Learn how to optimize nutrition and exercise based on your menstrual phase for better health."},
+
+    {"title": "Hormonal Birth Control: Benefits, Risks, and Finding the Right Method",
+     "category": "Women's Health", "focus_keyword": "hormonal birth control methods",
+     "meta_desc": "Exploring birth control options? We break down hormonal methods, their benefits, side effects, and how to choose what's right for you."},
+
+    {"title": "Perimenopause and Menopause: What to Expect and How to Manage Symptoms",
+     "category": "Women's Health", "focus_keyword": "perimenopause menopause symptoms",
+     "meta_desc": "Menopause is a major life transition. Understand the stages, symptoms, and the most effective natural and medical management strategies."},
+
+    {"title": "Polycystic Ovary Syndrome (PCOS): Symptoms, Diagnosis, and Treatment",
+     "category": "Women's Health", "focus_keyword": "PCOS symptoms treatment",
+     "meta_desc": "PCOS affects 1 in 10 women. Learn what causes it, how it's diagnosed, and the lifestyle and medical approaches that effectively manage PCOS."},
+
+    {"title": "Breast Health: Self-Exams, Screening, and What to Know About Lumps",
+     "category": "Women's Health", "focus_keyword": "breast health screening",
+     "meta_desc": "Empower yourself with knowledge about breast health, self-examination techniques, screening guidelines, and when to seek medical advice."},
+
+    {"title": "Pregnancy and Postpartum Wellness: Nutrition and Recovery Guide",
+     "category": "Women's Health", "focus_keyword": "pregnancy postpartum wellness",
+     "meta_desc": "Prepare for pregnancy and recovery with this evidence-based guide to nutrition, exercise, mental health, and postpartum self-care."},
+
+    {"title": "Pelvic Floor Health: Why It Matters and Effective Exercises for Women",
+     "category": "Women's Health", "focus_keyword": "pelvic floor health exercises",
+     "meta_desc": "Pelvic floor dysfunction affects many women. Understand the importance of pelvic floor health and learn targeted exercises to strengthen it."},
+
+    {"title": "Women's Cardiovascular Health: Understanding Risk Factors Specific to Women",
+     "category": "Women's Health", "focus_keyword": "women cardiovascular health",
+     "meta_desc": "Heart disease symptoms and risk factors differ in women. Discover gender-specific cardiovascular health information and prevention strategies."},
+
 ]
