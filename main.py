@@ -71,10 +71,26 @@ def save_history(history: dict) -> None:
         json.dump(history, f, ensure_ascii=False, indent=2)
 
 
-def get_next_topic(history: dict) -> tuple[dict, int]:
-    """Return the next topic and its index, cycling back when exhausted."""
-    idx = history.get("next_topic_index", 0) % len(TOPIC_BANK)
-    return TOPIC_BANK[idx], idx
+def get_next_topic(history: dict) -> tuple[dict, int] | None:
+    """Return the next unpublished topic and its index.
+
+    Scans from next_topic_index forward, skipping topics whose title
+    already appears in history["published"].  Returns None when ALL
+    topics have been published (no duplicates).
+    """
+    published_titles = {rec["title"] for rec in history.get("published", [])}
+    start = history.get("next_topic_index", 0)
+    n = len(TOPIC_BANK)
+
+    # Scan forward from start index, wrapping around once
+    for offset in range(n):
+        idx = (start + offset) % n
+        topic = TOPIC_BANK[idx]
+        if topic["title"] not in published_titles:
+            return topic, idx
+
+    # All topics have been published — no unused topic left
+    return None
 
 
 # ─────────────────────────────────────────────
@@ -95,7 +111,17 @@ def run_posting_job() -> None:
     posts_today = 0
 
     for _ in range(POSTS_PER_DAY):
-        topic, idx = get_next_topic(history)
+        next_topic = get_next_topic(history)
+
+        if next_topic is None:
+            logger.warning(
+                "⚠️  All %d topics have been published — no new topic available. "
+                "Add more topics to topics.py or clear history.json to re-post.",
+                len(TOPIC_BANK),
+            )
+            break
+
+        topic, idx = next_topic
         logger.info("Topic #%d: %s [%s]", idx, topic["title"], topic["category"])
 
         try:
@@ -105,28 +131,30 @@ def run_posting_job() -> None:
             logger.info("Article generated — approx. %d words", word_count)
 
             logger.info("Publishing to WordPress...")
-            result = publish_article(article)
+            pub_result = publish_article(article)
 
-            if result["success"]:
+            if pub_result["success"]:
                 history["published"].append({
                     "topic_index": idx,
-                    "title":       result["title"],
-                    "url":         result["url"],
-                    "post_id":     result["post_id"],
-                    "category":    result["category"],
-                    "date":        result["published_at"],
+                    "title":       pub_result["title"],
+                    "url":         pub_result["url"],
+                    "post_id":     pub_result["post_id"],
+                    "category":    pub_result["category"],
+                    "date":        pub_result["published_at"],
                 })
                 history["next_topic_index"] = (idx + 1) % len(TOPIC_BANK)
                 posts_today += 1
-                logger.info("✅ Success: %s → %s", result["title"], result["url"])
+                logger.info("✅ Success: %s → %s", pub_result["title"], pub_result["url"])
+                # Save immediately after each successful publish to prevent data loss
+                save_history(history)
             else:
-                logger.error("❌ Failed: %s — %s", result["title"], result.get("error_detail", ""))
+                logger.error("❌ Failed: %s — %s", pub_result["title"], pub_result.get("error_detail", ""))
 
         except Exception as exc:
             logger.exception("Unexpected error processing topic %d: %s", idx, exc)
 
-    save_history(history)
     logger.info("Job complete - %d/%d post(s) published today.", posts_today, POSTS_PER_DAY)
+    logger.info("Progress: %d/%d topics published", len(history.get("published", [])), len(TOPIC_BANK))
     logger.info("=" * 60)
 
 
