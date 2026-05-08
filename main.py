@@ -78,7 +78,7 @@ def get_next_topic(history: dict) -> tuple[dict, int] | None:
     already appears in history["published"].  Returns None when ALL
     topics have been published (no duplicates).
     """
-    published_titles = {rec["title"] for rec in history.get("published", [])}
+    published_titles = {rec.get("title", "") for rec in history.get("published", []) if rec.get("title")}
     start = history.get("next_topic_index", 0)
     n = len(TOPIC_BANK)
 
