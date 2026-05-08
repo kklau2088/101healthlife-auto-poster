@@ -71,6 +71,18 @@ AUTHORITY_SOURCES = {
         "https://www.healthit.gov",
         "https://www.nature.com/subjects/machine-learning",
     ],
+    "Lifestyle": [
+        "https://www.healthline.com",
+        "https://www.mayoclinic.org",
+        "https://www.nhs.uk/live-well",
+        "https://www.cdc.gov/healthy-living",
+    ],
+    "Women's Health": [
+        "https://www.womenshealth.gov",
+        "https://www.acog.org",
+        "https://www.mayoclinic.org",
+        "https://www.healthline.com/health/womens-health",
+    ],
     "Care": [
         "https://www.cdc.gov/aging",
         "https://www.nia.nih.gov",

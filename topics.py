@@ -231,4 +231,225 @@ TOPIC_BANK = [
      "category": "Women's Health", "focus_keyword": "women cardiovascular health",
      "meta_desc": "Heart disease symptoms and risk factors differ in women. Discover gender-specific cardiovascular health information and prevention strategies."},
 
+    # ── Diet (Round 2) ────────────────────────────────────────────────────────
+    {"title": "The DASH Diet: A Complete Guide to Lowering Blood Pressure Through Food",
+     "category": "Diet", "focus_keyword": "DASH diet blood pressure",
+     "meta_desc": "Learn how the DASH diet can effectively reduce blood pressure and improve heart health with practical meal plans and food lists."},
+
+    {"title": "Keto Diet for Beginners: What to Eat, What to Avoid, and Does It Work?",
+     "category": "Diet", "focus_keyword": "keto diet beginners",
+     "meta_desc": "A science-based beginner's guide to the ketogenic diet—how it works, what to eat, potential risks, and whether it's right for you."},
+
+    {"title": "FODMAP Diet Explained: How It Helps IBS and Gut Issues",
+     "category": "Diet", "focus_keyword": "FODMAP diet IBS",
+     "meta_desc": "Struggling with IBS? Discover how the low-FODMAP diet works, which foods to avoid, and a step-by-step elimination guide."},
+
+    {"title": "The Flexitarian Diet: A Flexible Approach to Plant-Based Eating",
+     "category": "Diet", "focus_keyword": "flexitarian diet",
+     "meta_desc": "Want the benefits of vegetarianism without giving up meat entirely? The flexitarian diet offers the best of both worlds."},
+
+    {"title": "Acid Reflux Diet: Foods to Eat and Avoid for GERD Relief",
+     "category": "Diet", "focus_keyword": "acid reflux diet GERD",
+     "meta_desc": "Suffering from acid reflux? Learn which foods trigger GERD symptoms and which ones can help soothe your digestive tract."},
+
+    {"title": "The Whole30 Diet: What It Is, How It Works, and What the Science Says",
+     "category": "Diet", "focus_keyword": "Whole30 diet review",
+     "meta_desc": "Is the Whole30 diet a legitimate reset or just another fad? We examine the rules, benefits, drawbacks, and what science actually says."},
+
+    {"title": "Eating for Longevity: The Blue Zones Diet and What Centenarians Eat",
+     "category": "Diet", "focus_keyword": "Blue Zones diet longevity",
+     "meta_desc": "Discover the dietary patterns of the world's longest-living populations and how the Blue Zones diet can add years to your life."},
+
+    # ── Weight Loss (Round 2) ─────────────────────────────────────────────────
+    {"title": "GLP-1 Agonists for Weight Loss: Beyond Ozempic—What You Need to Know",
+     "category": "Weight Loss", "focus_keyword": "GLP-1 agonists weight loss",
+     "meta_desc": "GLP-1 drugs like Wegovy, Mounjaro, and Zepbound are revolutionising weight loss. Compare options, costs, side effects, and who qualifies."},
+
+    {"title": "Strength Training for Weight Loss: Why Lifting Weights Beats Cardio",
+     "category": "Weight Loss", "focus_keyword": "strength training weight loss",
+     "meta_desc": "Cardio isn't the only path to fat loss. Learn why strength training builds muscle, boosts metabolism, and delivers lasting weight-loss results."},
+
+    {"title": "Emotional Eating: How to Identify Triggers and Break the Cycle",
+     "category": "Weight Loss", "focus_keyword": "emotional eating triggers",
+     "meta_desc": "Do you eat when stressed, sad, or bored? Learn how to recognise emotional eating triggers and develop healthier coping strategies."},
+
+    {"title": "Walking for Weight Loss: How Many Steps Does It Actually Take?",
+     "category": "Weight Loss", "focus_keyword": "walking for weight loss steps",
+     "meta_desc": "Can walking really help you lose weight? We break down the science on step counts, pace, and how to maximise fat burning on foot."},
+
+    {"title": "Intermittent Fasting for Weight Loss: Which Protocol Works Best?",
+     "category": "Weight Loss", "focus_keyword": "intermittent fasting weight loss protocol",
+     "meta_desc": "16:8, 5:2, alternate-day—which intermittent fasting method is most effective for weight loss? We compare the science behind each approach."},
+
+    {"title": "How Hormones Affect Weight Loss: Thyroid, Cortisol, and Insulin Explained",
+     "category": "Weight Loss", "focus_keyword": "hormones weight loss",
+     "meta_desc": "Stuck despite dieting? Hormonal imbalances may be to blame. Learn how thyroid, cortisol, and insulin impact your ability to lose weight."},
+
+    {"title": "Weight Loss After 40: Why It Gets Harder and What Actually Works",
+     "category": "Weight Loss", "focus_keyword": "weight loss after 40",
+     "meta_desc": "Metabolism slows with age, but weight loss after 40 isn't impossible. Discover the science-backed strategies that work for midlife weight management."},
+
+    # ── Nutrition (Round 2) ───────────────────────────────────────────────────
+    {"title": "Collagen Supplements: Do They Actually Work for Skin, Joints, and Gut?",
+     "category": "Nutrition", "focus_keyword": "collagen supplements benefits",
+     "meta_desc": "Collagen supplements are everywhere—but do they deliver real results? We examine the science on collagen for skin, joints, and gut health."},
+
+    {"title": "Iron Deficiency Anaemia: Signs You're Not Getting Enough Iron",
+     "category": "Nutrition", "focus_keyword": "iron deficiency anaemia",
+     "meta_desc": "Fatigue, pale skin, and cold hands? You may be low on iron. Learn the signs of iron deficiency anaemia and the best dietary sources to fix it."},
+
+    {"title": "Electrolytes Explained: Why You Need Them and How to Replenish Them",
+     "category": "Nutrition", "focus_keyword": "electrolytes balance health",
+     "meta_desc": "Sodium, potassium, magnesium, calcium—electrolytes keep your body running. Learn what they do, signs of imbalance, and how to stay replenished."},
+
+    {"title": "Fiber: How Much You Really Need and the Best High-Fiber Foods",
+     "category": "Nutrition", "focus_keyword": "high fiber foods daily intake",
+     "meta_desc": "Most people get only half the fiber they need. Discover why fiber matters, how much you should eat daily, and the best food sources."},
+
+    {"title": "Adaptogens Explained: Do Ashwagandha, Rhodiola, and Reishi Really Work?",
+     "category": "Nutrition", "focus_keyword": "adaptogens ashwagandha benefits",
+     "meta_desc": "Adaptogenic herbs claim to reduce stress and boost resilience. We examine the evidence behind ashwagandha, rhodiola, reishi, and other popular adaptogens."},
+
+    {"title": "Zinc: The Immune-Boosting Mineral Most People Overlook",
+     "category": "Nutrition", "focus_keyword": "zinc immune system benefits",
+     "meta_desc": "Zinc plays a critical role in immunity, wound healing, and more. Learn the signs of deficiency, best food sources, and how to supplement safely."},
+
+    {"title": "Food Combining: Is There Any Science Behind the Trend?",
+     "category": "Nutrition", "focus_keyword": "food combining myth science",
+     "meta_desc": "Food combining diets claim that pairing certain foods improves digestion and weight loss. We separate the science from the pseudoscience."},
+
+    # ── Mental Health (Round 2) ───────────────────────────────────────────────
+    {"title": "Cognitive Behavioral Therapy (CBT): How It Works and What It Treats",
+     "category": "Mental Health", "focus_keyword": "cognitive behavioral therapy CBT",
+     "meta_desc": "CBT is one of the most effective therapies for anxiety, depression, and more. Learn how it works, what to expect, and how to get started."},
+
+    {"title": "The Science of Gratitude: How Being Thankful Changes Your Brain",
+     "category": "Mental Health", "focus_keyword": "gratitude science mental health",
+     "meta_desc": "Practising gratitude does more than make you feel good—it physically changes your brain. Discover the neuroscience behind thankfulness."},
+
+    {"title": "Loneliness Epidemic: Health Risks and How to Rebuild Connection",
+     "category": "Mental Health", "focus_keyword": "loneliness health risks epidemic",
+     "meta_desc": "Chronic loneliness is as dangerous as smoking 15 cigarettes a day. Learn the health risks and evidence-based strategies to reconnect."},
+
+    {"title": "Sleep and Mental Health: Why Poor Sleep Wrecks Your Mood and Focus",
+     "category": "Mental Health", "focus_keyword": "sleep mental health connection",
+     "meta_desc": "Poor sleep doesn't just make you tired—it damages your mental health. Explore the deep connection between sleep quality and emotional wellbeing."},
+
+    {"title": "Therapy vs. Medication: Which Is Right for Your Mental Health?",
+     "category": "Mental Health", "focus_keyword": "therapy vs medication mental health",
+     "meta_desc": "Unsure whether to try therapy, medication, or both? We compare the evidence, benefits, and limitations of each approach to help you decide."},
+
+    {"title": "Journaling for Mental Health: How Writing Your Thoughts Reduces Anxiety",
+     "category": "Mental Health", "focus_keyword": "journaling mental health anxiety",
+     "meta_desc": "Writing down your thoughts can be surprisingly therapeutic. Learn the science behind journaling and practical techniques to reduce anxiety."},
+
+    # ── Health Insurance (Round 2) ────────────────────────────────────────────
+    {"title": "Health Insurance for Seniors: Navigating Medicare and Supplemental Plans",
+     "category": "Health Insurance", "focus_keyword": "Medicare supplemental plans seniors",
+     "meta_desc": "Turning 65? This guide explains Medicare Parts A–D, Medigap policies, and how to choose the right coverage for your healthcare needs."},
+
+    {"title": "COBRA Insurance: What It Is, How Much It Costs, and Better Alternatives",
+     "category": "Health Insurance", "focus_keyword": "COBRA insurance alternatives",
+     "meta_desc": "Lost your job and wondering about COBRA? Learn how COBRA continuation coverage works, typical costs, and cheaper alternatives."},
+
+    {"title": "Health Savings Account (HSA): The Ultimate Tax-Advantaged Healthcare Tool",
+     "category": "Health Insurance", "focus_keyword": "HSA health savings account benefits",
+     "meta_desc": "An HSA offers triple tax advantages and can be a powerful retirement tool. Learn who qualifies, contribution limits, and smart strategies."},
+
+    {"title": "How to Appeal a Health Insurance Denial and Win",
+     "category": "Health Insurance", "focus_keyword": "appeal health insurance denial",
+     "meta_desc": "Insurance denied your claim? You have the right to appeal. Follow this step-by-step guide to challenge denials and get the coverage you deserve."},
+
+    # ── Smoking (Round 2) ─────────────────────────────────────────────────────
+    {"title": "Secondhand Smoke: The Hidden Dangers to Your Family's Health",
+     "category": "Smoking", "focus_keyword": "secondhand smoke health risks",
+     "meta_desc": "Secondhand smoke causes serious harm—even to non-smokers. Learn the risks to children, pets, and partners, and how to protect your household."},
+
+    {"title": "Nicotine Replacement Therapy (NRT): Which Method Works Best?",
+     "category": "Smoking", "focus_keyword": "nicotine replacement therapy NRT",
+     "meta_desc": "Patches, gum, lozenges, inhalers—NRT comes in many forms. Compare effectiveness, side effects, and how to choose the right method for you."},
+
+    {"title": "Smoking and Lung Cancer: Understanding the Link and Early Detection",
+     "category": "Smoking", "focus_keyword": "smoking lung cancer screening",
+     "meta_desc": "Smoking is the leading cause of lung cancer. Learn about the link, early screening options, and why low-dose CT scans can save lives."},
+
+    {"title": "Quitting Smoking Without Weight Gain: A Practical Guide",
+     "category": "Smoking", "focus_keyword": "quit smoking without weight gain",
+     "meta_desc": "Worried about gaining weight after quitting smoking? Science-backed strategies to kick the habit without expanding your waistline."},
+
+    # ── AI in Health (Round 2) ────────────────────────────────────────────────
+    {"title": "AI in Mental Health Therapy: Can Chatbots Replace Counsellors?",
+     "category": "AI in Health", "focus_keyword": "AI mental health chatbot",
+     "meta_desc": "AI-powered therapy chatbots are growing in popularity. We examine their effectiveness, limitations, and ethical concerns in mental healthcare."},
+
+    {"title": "AI Drug Discovery: How Artificial Intelligence Is Speeding Up New Medicines",
+     "category": "AI in Health", "focus_keyword": "AI drug discovery",
+     "meta_desc": "AI is cutting drug development timelines from years to months. Explore how machine learning is accelerating the discovery of new treatments."},
+
+    {"title": "Wearable AI Health Devices: Smartwatches That Can Detect Disease Early",
+     "category": "AI in Health", "focus_keyword": "AI wearable health monitoring",
+     "meta_desc": "From atrial fibrillation to sleep apnoea, AI-powered wearables can now detect health conditions before symptoms appear. Here's what they can do."},
+
+    {"title": "AI in Radiology: How Machine Learning Is Improving Medical Imaging",
+     "category": "AI in Health", "focus_keyword": "AI radiology medical imaging",
+     "meta_desc": "AI is matching—and sometimes exceeding—radiologists in detecting cancers and abnormalities. Learn how this technology is transforming diagnostics."},
+
+    # ── Lifestyle (Round 2) ───────────────────────────────────────────────────
+    {"title": "Cold Plunges and Ice Baths: Do the Health Benefits Live Up to the Hype?",
+     "category": "Lifestyle", "focus_keyword": "cold plunge health benefits",
+     "meta_desc": "Cold water immersion is trending, but does it actually improve recovery, immunity, and mental health? We dive into the science."},
+
+    {"title": "Nordic Walking: The Low-Impact Exercise That Burns More Calories Than Regular Walking",
+     "category": "Lifestyle", "focus_keyword": "Nordic walking benefits",
+     "meta_desc": "Nordic walking engages 90% of your muscles and burns up to 46% more calories than regular walking. Learn the technique and health benefits."},
+
+    {"title": "Forest Bathing (Shinrin-Yoku): How Time in Nature Reduces Stress Hormones",
+     "category": "Lifestyle", "focus_keyword": "forest bathing shinrin-yoku",
+     "meta_desc": "The Japanese practice of forest bathing is backed by science—time among trees lowers cortisol, blood pressure, and inflammation. Here's how to start."},
+
+    {"title": "The 5:2 Lifestyle: Balancing Work and Rest for Better Health",
+     "category": "Lifestyle", "focus_keyword": "5:2 work rest balance",
+     "meta_desc": "Working too hard? The 5:2 lifestyle approach prioritises recovery alongside productivity. Learn how structured rest improves long-term performance."},
+
+    {"title": "Pet Ownership and Health: How Animals Improve Your Physical and Mental Wellbeing",
+     "category": "Lifestyle", "focus_keyword": "pet ownership health benefits",
+     "meta_desc": "Owning a pet does more than provide companionship—it lowers blood pressure, reduces anxiety, and increases physical activity. Explore the science."},
+
+    {"title": "The Health Benefits of Gardening: Why Getting Your Hands Dirty Is Good for You",
+     "category": "Lifestyle", "focus_keyword": "gardening health benefits",
+     "meta_desc": "Gardening reduces stress, boosts vitamin D, and provides gentle exercise. Discover why this hobby is one of the healthiest activities you can do."},
+
+    {"title": "Sunlight and Health: How Safe Sun Exposure Boosts Vitamin D and Mood",
+     "category": "Lifestyle", "focus_keyword": "sunlight vitamin D health",
+     "meta_desc": "Sunlight isn't all bad—moderate exposure boosts vitamin D, serotonin, and sleep quality. Learn how to get the benefits without the skin damage risk."},
+
+    # ── Women's Health (Round 2) ──────────────────────────────────────────────
+    {"title": "Endometriosis: Why It Takes Years to Diagnose and How to Get Help Faster",
+     "category": "Women's Health", "focus_keyword": "endometriosis diagnosis delay",
+     "meta_desc": "Endometriosis affects 1 in 10 women but takes an average of 7–10 years to diagnose. Learn the signs, how to advocate for yourself, and treatment options."},
+
+    {"title": "Fertility and Nutrition: What to Eat (and Avoid) When Trying to Conceive",
+     "category": "Women's Health", "focus_keyword": "fertility nutrition conceive",
+     "meta_desc": "Diet plays a surprising role in fertility. Discover the foods that boost reproductive health and the ones to avoid when trying to conceive."},
+
+    {"title": "Thyroid Disorders in Women: Hypothyroidism, Hyperthyroidism, and Weight Gain",
+     "category": "Women's Health", "focus_keyword": "thyroid disorders women weight",
+     "meta_desc": "Women are 5–8 times more likely to develop thyroid problems. Learn the symptoms of hypo- and hyperthyroidism and how they affect weight and energy."},
+
+    {"title": "Iron Deficiency in Women: Why It's So Common and How to Fix It",
+     "category": "Women's Health", "focus_keyword": "iron deficiency women",
+     "meta_desc": "Menstruation, pregnancy, and diet make women especially prone to iron deficiency. Learn the warning signs and effective strategies to boost your levels."},
+
+    {"title": "Bone Health After Menopause: How to Prevent Osteoporosis",
+     "category": "Women's Health", "focus_keyword": "osteoporosis prevention menopause",
+     "meta_desc": "Post-menopausal women face a sharply increased risk of osteoporosis. Learn evidence-based strategies for bone density preservation through diet, exercise, and lifestyle."},
+
+    {"title": "Uterine Fibroids: Symptoms, Treatment Options, and When to Seek Help",
+     "category": "Women's Health", "focus_keyword": "uterine fibroids treatment",
+     "meta_desc": "Up to 80% of women develop fibroids by age 50. Understand the symptoms, when they need treatment, and the latest minimally invasive options."},
+
+    {"title": "The Post-Birth Control Syndrome: What Happens When You Stop Hormonal Contraception",
+     "category": "Women's Health", "focus_keyword": "post birth control syndrome",
+     "meta_desc": "Coming off hormonal birth control? Learn about post-birth control syndrome, what symptoms to expect, and how to support your body's natural hormone balance."},
+
 ]
