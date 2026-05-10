@@ -48,6 +48,7 @@ logger = logging.getLogger(__name__)
 # ───────────────────────────────────────────
 
 _USED_PHOTOS_FILE = os.path.join(os.path.dirname(__file__), "used_photos.json")
+_LOG_FILE = os.path.join(os.path.dirname(__file__), "poster.log")
 
 
 def _load_used_photo_ids() -> set:
@@ -70,14 +71,67 @@ def _save_used_photo_ids(used: set) -> None:
         logger.warning("Could not save used_photos.json: %s", exc)
 
 
+def _extract_pexels_ids_from_log() -> set:
+    """Parse poster.log to extract Pexels photo IDs from historical runs.
+
+    Matches log lines like:
+      - "Pexels photo selected: id=12345 query='keyword' page=3"
+      - "Replaced duplicate Pexels image (ID: 12345 -> 67890)"
+      - "Could not find replacement for Pexels ID 12345"
+      - "Could not upload replacement for Pexels ID 12345"
+      - "Could not locate Pexels ID 12345 in HTML content"
+
+    Returns a set of integer Pexels photo IDs found in the log.
+    """
+    ids = set()
+
+    if not os.path.exists(_LOG_FILE):
+        return ids
+
+    try:
+        with open(_LOG_FILE, "r", encoding="utf-8", errors="replace") as f:
+            for line in f:
+                # Match "Pexels photo selected: id=NNNNN"
+                m = re.search(r'Pexels photo selected:\s*id=(\d+)', line, re.IGNORECASE)
+                if m:
+                    try:
+                        ids.add(int(m.group(1)))
+                    except ValueError:
+                        pass
+                    continue
+
+                # Match "Pexels ID NNNNN" or "Pexels ID: NNNNN"
+                m = re.search(r'Pexels ID[:\s]+(\d+)', line, re.IGNORECASE)
+                if m:
+                    try:
+                        ids.add(int(m.group(1)))
+                    except ValueError:
+                        pass
+                    continue
+
+                # Match "ID: NNNNN -> MMMMM" (replacement records)
+                for m in re.finditer(r'ID:\s*(\d+)\s*->', line):
+                    try:
+                        ids.add(int(m.group(1)))
+                    except ValueError:
+                        pass
+
+    except Exception as exc:
+        logger.warning("Could not read poster.log for Pexels IDs: %s", exc)
+
+    return ids
+
+
 def load_all_used_pexels_ids(published_articles: list[dict]) -> set:
-    """Build a complete set of used Pexels IDs from BOTH sources:
+    """Build a complete set of used Pexels IDs from ALL sources:
 
     1. used_photos.json (primary tracking file)
     2. history["published"] records (pexels_ids field)
+    3. poster.log (historical log entries with Pexels IDs)
 
     This ensures that even if used_photos.json is deleted or incomplete,
-    we still won't reuse photos from previously published articles.
+    or history.json has no pexels_ids field (older records), we still
+    won't reuse photos from previously published articles.
     """
     used_ids = _load_used_photo_ids()
 
@@ -88,6 +142,12 @@ def load_all_used_pexels_ids(published_articles: list[dict]) -> set:
                 used_ids.add(int(pid))
             except (ValueError, TypeError):
                 pass
+
+    # Merge IDs from poster.log (covers old records without pexels_ids)
+    log_ids = _extract_pexels_ids_from_log()
+    if log_ids:
+        logger.info("Extracted %d Pexels photo ID(s) from poster.log", len(log_ids))
+        used_ids.update(log_ids)
 
     return used_ids
 
