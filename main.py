@@ -37,7 +37,7 @@ except ImportError:
 from config import POSTS_PER_DAY, POST_TIME, TIMEZONE
 from topics import TOPIC_BANK
 from article_generator import generate_article
-from wp_publisher import publish_article, test_connection
+from wp_publisher import publish_article, test_connection, load_all_used_pexels_ids
 
 # ─────────────────────────────────────────────
 #  Logging setup
@@ -110,6 +110,11 @@ def run_posting_job() -> None:
     history = load_history()
     posts_today = 0
 
+    # Build the complete set of Pexels IDs used across all published articles
+    # This is passed to publish_article() to prevent image reuse
+    extra_pexels_ids = load_all_used_pexels_ids(history.get("published", []))
+    logger.info("Loaded %d previously used Pexels photo IDs from history", len(extra_pexels_ids))
+
     for _ in range(POSTS_PER_DAY):
         next_topic = get_next_topic(history)
 
@@ -131,17 +136,23 @@ def run_posting_job() -> None:
             logger.info("Article generated — approx. %d words", word_count)
 
             logger.info("Publishing to WordPress...")
-            pub_result = publish_article(article)
+            pub_result = publish_article(article, extra_used_pexels_ids=extra_pexels_ids)
 
             if pub_result["success"]:
-                history["published"].append({
+                record = {
                     "topic_index": idx,
                     "title":       pub_result["title"],
                     "url":         pub_result["url"],
                     "post_id":     pub_result["post_id"],
                     "category":    pub_result["category"],
                     "date":        pub_result["published_at"],
-                })
+                }
+                # Record Pexels IDs used in this article for future dedup
+                if pub_result.get("pexels_ids"):
+                    record["pexels_ids"] = pub_result["pexels_ids"]
+                    extra_pexels_ids.update(pub_result["pexels_ids"])
+
+                history["published"].append(record)
                 history["next_topic_index"] = (idx + 1) % len(TOPIC_BANK)
                 posts_today += 1
                 logger.info("✅ Success: %s → %s", pub_result["title"], pub_result["url"])

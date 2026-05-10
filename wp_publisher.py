@@ -8,6 +8,7 @@ Publishes a generated article to WordPress via the REST API.
 - Uploads image to WordPress Media Library
 - Sets it as the Featured Image (thumbnail)
 - Inserts one inline image near the top of the article content
+- Cross-checks Pexels images against history.json to prevent reuse
 
 WordPress setup required:
 1. Log in to WP Admin -> Users -> Profile
@@ -69,6 +70,28 @@ def _save_used_photo_ids(used: set) -> None:
         logger.warning("Could not save used_photos.json: %s", exc)
 
 
+def load_all_used_pexels_ids(published_articles: list[dict]) -> set:
+    """Build a complete set of used Pexels IDs from BOTH sources:
+
+    1. used_photos.json (primary tracking file)
+    2. history["published"] records (pexels_ids field)
+
+    This ensures that even if used_photos.json is deleted or incomplete,
+    we still won't reuse photos from previously published articles.
+    """
+    used_ids = _load_used_photo_ids()
+
+    # Merge IDs from history.json published records
+    for rec in published_articles:
+        for pid in rec.get("pexels_ids", []):
+            try:
+                used_ids.add(int(pid))
+            except (ValueError, TypeError):
+                pass
+
+    return used_ids
+
+
 # ───────────────────────────────────────────
 # Fallback links by domain (used when a link
 # is unreachable — swap to the site homepage)
@@ -99,6 +122,8 @@ DOMAIN_FALLBACKS = {
     "nature.com": "https://www.nature.com/subjects/health-sciences",
     "nia.nih.gov": "https://www.nia.nih.gov/health",
     "caregiver.org": "https://www.caregiver.org/resource/caregiver-help-start",
+    "womenshealth.gov": "https://www.womenshealth.gov",
+    "acog.org": "https://www.acog.org",
 }
 
 # ───────────────────────────────────────────
@@ -589,14 +614,22 @@ def _get_or_create_tag(tag_name: str, headers: dict) -> int | None:
 # Main publish function
 # ───────────────────────────────────────────
 
-def publish_article(article: dict) -> dict:
+def publish_article(article: dict, extra_used_pexels_ids: set | None = None) -> dict:
     """
     Pre-publish pipeline:
     1. Validate & fix all external links in the article
     2. Fix paragraphs exceeding 120 words (Rank Math 14.2)
     3. Fetch + upload a unique Pexels featured image
     4. Insert extra unique images to reach at least 4 total (Rank Math 14.3)
-    5. Publish to WordPress with Rank Math SEO meta
+    5. Cross-check images against published articles and replace duplicates
+    6. Publish to WordPress with Rank Math SEO meta
+
+    Parameters:
+        article: dict with keys title, content, meta_desc, focus_keyword, category
+        extra_used_pexels_ids: set of Pexels photo IDs from previously published
+                               articles (loaded from history.json). These are
+                               merged with used_photos.json to prevent any
+                               photo reuse across articles.
     """
     auth_header = _get_auth_header()
     api_url = f"{WORDPRESS_SITE_URL}/wp-json/wp/v2/posts"
@@ -615,19 +648,26 @@ def publish_article(article: dict) -> dict:
 
     # Load the set of Pexels photo IDs used in previous articles so we
     # never reuse the same photo across different posts.
+    # Merge BOTH sources: used_photos.json + history.json published records
     used_ids = _load_used_photo_ids()
+    if extra_used_pexels_ids:
+        used_ids.update(extra_used_pexels_ids)
+
+    logger.info("Pexels dedup: %d previously used photo IDs loaded", len(used_ids))
 
     # ── STEP 1: Validate & fix external links ──
-    logger.info("STEP 1/5 - Validating external links...")
+    logger.info("STEP 1/6 - Validating external links...")
     content = validate_and_fix_links(article["content"])
 
     # ── STEP 2: Fix long paragraphs (Rank Math 14.2) ──
-    logger.info("STEP 2/5 - Checking paragraph lengths (Rank Math 14.2)...")
+    logger.info("STEP 2/6 - Checking paragraph lengths (Rank Math 14.2)...")
     content = fix_long_paragraphs(content)
 
     # ── STEP 3: Pexels featured image ─────────
-    logger.info("STEP 3/5 - Fetching unique Pexels featured image...")
+    logger.info("STEP 3/6 - Fetching unique Pexels featured image...")
     media_id = None
+    pexels_ids_used = []  # Track Pexels IDs used in this article
+
     # slot_index=0 → first image slot for this article
     image_info = _fetch_pexels_image(
         article["focus_keyword"],
@@ -640,6 +680,7 @@ def publish_article(article: dict) -> dict:
         if media_id and media_url:
             # Mark photo as used immediately so extra-image step won't reuse it
             used_ids.add(image_info["id"])
+            pexels_ids_used.append(image_info["id"])
             caption = f'Photo by {image_info["photographer"]} on <a href="{image_info["photo_url"]}" target="_blank" rel="noopener noreferrer">Pexels</a>'
             content = _insert_image_into_content(
                 content, media_url, article["focus_keyword"], caption
@@ -649,7 +690,10 @@ def publish_article(article: dict) -> dict:
             media_id = None
 
     # ── STEP 4: Ensure at least 4 images (Rank Math 14.3) ──
-    logger.info("STEP 4/5 - Checking image count (Rank Math 14.3)...")
+    logger.info("STEP 4/6 - Checking image count (Rank Math 14.3)...")
+    # Track image count before extras
+    img_count_before = _count_images_in_content(content)
+
     content = insert_extra_pexels_images(
         content,
         article["focus_keyword"],
@@ -658,11 +702,24 @@ def publish_article(article: dict) -> dict:
         used_ids=used_ids,   # pass the shared set so all slots stay unique
     )
 
+    # Collect any new Pexels IDs added by the extra images step
+    # (IDs were added to used_ids inside insert_extra_pexels_images)
+    img_count_after = _count_images_in_content(content)
+    # All IDs added after the featured image are extras
+    new_ids = used_ids - _load_used_photo_ids() - set(pexels_ids_used)
+    pexels_ids_used.extend(new_ids)
+
+    # ── STEP 5: Final cross-check — verify no Pexels image duplicates ──
+    logger.info("STEP 5/6 - Final cross-check for Pexels image duplicates...")
+    content, media_id, used_ids, pexels_ids_used = _cross_check_and_replace_duplicates(
+        content, article["focus_keyword"], auth_header, media_id, used_ids, pexels_ids_used
+    )
+
     # Persist updated used-photo IDs so the next article run benefits too
     _save_used_photo_ids(used_ids)
 
-    # ── STEP 5: Publish ──────────────────────
-    logger.info("STEP 5/5 - Publishing to WordPress...")
+    # ── STEP 6: Publish ──────────────────────
+    logger.info("STEP 6/6 - Publishing to WordPress...")
 
     seo_meta = {
         "rank_math_focus_keyword": article["focus_keyword"],
@@ -695,11 +752,14 @@ def publish_article(article: dict) -> dict:
             "title": article["title"],
             "category": category_name,
             "has_image": media_id is not None,
+            "pexels_ids": pexels_ids_used,  # Record Pexels IDs in history
             "published_at": datetime.utcnow().isoformat(),
         }
         logger.info(
-            "Published: %s -> %s (image: %s)",
-            article["title"], result["url"], "YES" if media_id else "NO",
+            "Published: %s -> %s (image: %s, pexels_ids: %s)",
+            article["title"], result["url"],
+            "YES" if media_id else "NO",
+            pexels_ids_used,
         )
         return result
 
@@ -714,6 +774,172 @@ def publish_article(article: dict) -> dict:
         "error_detail": resp.text,
         "published_at": datetime.utcnow().isoformat(),
     }
+
+
+# ───────────────────────────────────────────
+# Cross-article image duplication check
+# ───────────────────────────────────────────
+
+def _extract_pexels_ids_from_html(content: str) -> set[int]:
+    """Extract all Pexels photo IDs found in the article HTML.
+
+    Matches patterns like:
+      - pexels.com/photo/xxxx-12345/
+      - filename: keyword-12345.jpg
+      - pexels-photo-12345
+    """
+    pexels_ids = set()
+
+    # Match Pexels photo page URLs: pexels.com/photo/anything-12345/
+    for m in re.finditer(r'pexels\.com/photo/[^"]*?-(\d+)/?', content, re.IGNORECASE):
+        try:
+            pexels_ids.add(int(m.group(1)))
+        except ValueError:
+            pass
+
+    # Match common filename patterns: keyword-12345.jpg
+    for m in re.finditer(r'[\w-]+-(\d{5,})\.jpg', content, re.IGNORECASE):
+        try:
+            pexels_ids.add(int(m.group(1)))
+        except ValueError:
+            pass
+
+    # Match pexels-photo-NNNNN class patterns
+    for m in re.finditer(r'pexels[-_](?:photo[-_])?(\d+)', content, re.IGNORECASE):
+        try:
+            pexels_ids.add(int(m.group(1)))
+        except ValueError:
+            pass
+
+    return pexels_ids
+
+
+def _cross_check_and_replace_duplicates(
+    content: str,
+    keyword: str,
+    auth_header: dict,
+    featured_media_id: int | None,
+    used_ids: set,
+    pexels_ids_used: list,
+) -> tuple[str, int | None, set, list]:
+    """Final check: scan the article content for Pexels image IDs that
+    appear in the previously-used set (from used_photos.json + history.json).
+
+    If duplicates are found, replace them with fresh Pexels photos.
+
+    Returns (content, featured_media_id, used_ids, pexels_ids_used).
+    """
+    # The IDs saved to disk BEFORE this run (i.e. from previous articles)
+    previously_saved = _load_used_photo_ids()
+
+    # Also add any IDs from extra_used_pexels_ids that were merged in
+    # (these come from history.json and may not be in used_photos.json)
+    # We already have these in used_ids, so:
+    # "previously used by OTHER articles" = used_ids - pexels_ids_used (this article)
+    ids_from_this_article = set(pexels_ids_used)
+    previously_used_by_others = used_ids - ids_from_this_article
+
+    # Extract Pexels IDs from the actual HTML content
+    content_pexels_ids = _extract_pexels_ids_from_html(content)
+
+    if not content_pexels_ids:
+        logger.info("No Pexels IDs found in article HTML — cross-check passed.")
+        return content, featured_media_id, used_ids, pexels_ids_used
+
+    logger.info("Found %d Pexels photo ID(s) in article HTML: %s",
+                len(content_pexels_ids), sorted(content_pexels_ids))
+
+    # Find duplicates: IDs that are in the content AND were used by previous articles
+    duplicates = content_pexels_ids & previously_used_by_others
+
+    if not duplicates:
+        logger.info("Cross-check passed — all Pexels images are unique across articles.")
+        return content, featured_media_id, used_ids, pexels_ids_used
+
+    logger.warning("Found %d duplicate Pexels image(s): %s — replacing...",
+                   len(duplicates), sorted(duplicates))
+
+    replacements = 0
+    for pid_int in duplicates:
+        pid_str = str(pid_int)
+
+        # Fetch a replacement image
+        new_image = _fetch_pexels_image(
+            keyword,
+            used_ids=used_ids,
+            slot_index=pid_int % 10,  # Vary page selection
+        )
+
+        if not new_image:
+            logger.warning("Could not find replacement for Pexels ID %d — keeping original.", pid_int)
+            continue
+
+        # Upload the replacement
+        new_media_id, new_media_url = _upload_image_to_wordpress(new_image, auth_header)
+
+        if not new_media_id or not new_media_url:
+            logger.warning("Could not upload replacement for Pexels ID %d — keeping original.", pid_int)
+            continue
+
+        # Mark new photo as used
+        used_ids.add(new_image["id"])
+
+        # Update pexels_ids_used: remove old, add new
+        if pid_int in pexels_ids_used:
+            pexels_ids_used.remove(pid_int)
+        pexels_ids_used.append(new_image["id"])
+
+        # Replace in content — try multiple patterns
+        replaced = False
+
+        # Pattern 1: <figure>...</figure> containing the old Pexels ID
+        fig_pattern = re.compile(
+            r'<figure[^>]*>.*?<img[^>]*src="[^"]*' + re.escape(pid_str) + r'[^"]*"[^>]*>.*?</figure>',
+            re.DOTALL | re.IGNORECASE,
+        )
+        if fig_pattern.search(content):
+            caption = f'Photo by {new_image["photographer"]} on <a href="{new_image["photo_url"]}" target="_blank" rel="noopener noreferrer">Pexels</a>'
+            new_html = (
+                f'\n'
+                f'<figure class="wp-block-image aligncenter">'
+                f'<img src="{new_media_url}" alt="{keyword}" />'
+                f'<figcaption>{caption}</figcaption>'
+                f'</figure>\n'
+            )
+            content = fig_pattern.sub(new_html, content, count=1)
+            replaced = True
+
+        # Pattern 2: Pexels link containing the ID (in caption/figcaption)
+        if not replaced:
+            link_pattern = re.compile(
+                r'<a[^>]*href="[^"]*pexels\.com/photo/[^"]*' + re.escape(pid_str) + r'[^"]*"[^>]*>[^<]*</a>',
+                re.IGNORECASE,
+            )
+            if link_pattern.search(content):
+                # Replace just the link, keep the figure/img structure
+                new_link = f'<a href="{new_image["photo_url"]}" target="_blank" rel="noopener noreferrer">Pexels</a>'
+                content = link_pattern.sub(new_link, content, count=1)
+                replaced = True
+
+        # Pattern 3: filename pattern in src attribute
+        if not replaced:
+            src_pattern = re.compile(
+                r'(src=")([^"]*' + re.escape(pid_str) + r'[^"]*)(")',
+                re.IGNORECASE,
+            )
+            if src_pattern.search(content):
+                content = src_pattern.sub(r'\g<1>' + new_media_url + r'\3', content, count=1)
+                replaced = True
+
+        if replaced:
+            replacements += 1
+            logger.info("Replaced duplicate Pexels image (ID: %d -> %d)", pid_int, new_image["id"])
+        else:
+            logger.warning("Could not locate Pexels ID %d in HTML content — keeping original.", pid_int)
+
+    logger.info("Cross-check complete: replaced %d duplicate Pexels image(s).", replacements)
+    return content, featured_media_id, used_ids, pexels_ids_used
+
 
 # ───────────────────────────────────────────
 # Connection test
